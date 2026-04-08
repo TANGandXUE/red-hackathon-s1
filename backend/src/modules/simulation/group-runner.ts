@@ -7,7 +7,11 @@ import type {
 } from './interfaces/simulation.interfaces';
 import { Agent } from './agent';
 import { PhaseExecutor } from './phase-executor';
-import type { MessageCallback, TypingCallback } from './phase-executor';
+import type {
+  MessageCallback,
+  TypingCallback,
+  ToolCallCallback,
+} from './phase-executor';
 
 export class GroupRunner {
   private agents: Agent[];
@@ -29,6 +33,7 @@ export class GroupRunner {
   async runPhase1(
     onMessage: MessageCallback,
     onTyping?: TypingCallback,
+    onToolCall?: ToolCallCallback,
   ): Promise<void> {
     await this.phaseExecutor.executePhase1(
       this.agents,
@@ -36,6 +41,7 @@ export class GroupRunner {
       this.group.idea,
       onMessage,
       onTyping,
+      onToolCall,
     );
   }
 
@@ -43,6 +49,7 @@ export class GroupRunner {
     phase1Summary: string,
     onMessage: MessageCallback,
     onTyping?: TypingCallback,
+    onToolCall?: ToolCallCallback,
   ): Promise<BPDocument> {
     return this.phaseExecutor.executePhase2(
       this.agents,
@@ -50,6 +57,7 @@ export class GroupRunner {
       phase1Summary,
       onMessage,
       onTyping,
+      onToolCall,
     );
   }
 

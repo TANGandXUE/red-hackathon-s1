@@ -16,7 +16,7 @@ export class LlmService {
 
   constructor(private configService: ConfigService) {
     this.semaphore = new Semaphore(
-      this.configService.get<number>('LLM_MAX_CONCURRENT', 6),
+      Number(this.configService.get('LLM_MAX_CONCURRENT', 6)),
     );
     this.client = new OpenAI({
       baseURL: this.configService.getOrThrow('LLM_BASE_URL'),
@@ -32,7 +32,7 @@ export class LlmService {
       const response = await this.client.chat.completions.create({
         model: this.model,
         messages: [{ role: 'system', content: systemPrompt }, ...messages],
-        max_tokens: this.configService.get<number>('LLM_MAX_TOKENS', 4096),
+        max_tokens: Number(this.configService.get('LLM_MAX_TOKENS', 4096)),
       });
       return response.choices[0]?.message?.content || '';
     } finally {

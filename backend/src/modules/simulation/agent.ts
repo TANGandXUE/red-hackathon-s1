@@ -44,6 +44,11 @@ export class Agent {
   async speak(
     conversationHistory: ChatMessage[],
     taskInstruction: string,
+    onToolCall?: (
+      toolName: string,
+      toolInput: string,
+      status: 'calling' | 'completed',
+    ) => void,
   ): Promise<string> {
     const systemPrompt = this.systemPrompt;
     const messages: ChatMessage[] = [
@@ -55,7 +60,10 @@ export class Agent {
     // Check if response contains [SEARCH:query] pattern
     const searchMatch = response.match(/\[SEARCH:(.+?)\]/);
     if (searchMatch) {
-      const searchResult = await this.searchService.search(searchMatch[1]);
+      const query = searchMatch[1];
+      onToolCall?.('search', query, 'calling');
+      const searchResult = await this.searchService.search(query);
+      onToolCall?.('search', query, 'completed');
       messages.push({ role: 'assistant', content: response });
       messages.push({
         role: 'user',

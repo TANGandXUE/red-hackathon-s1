@@ -25,6 +25,15 @@ export type TypingCallback = (
   msg: AgentIdentity & { isTyping: boolean },
 ) => void;
 
+export type ToolCallCallback = (msg: {
+  groupId: number;
+  agentId: string;
+  agentName: string;
+  toolName: string;
+  toolInput: string;
+  status: 'calling' | 'completed';
+}) => void;
+
 /** Build a typing event payload from an Agent */
 export function buildTypingPayload(
   groupId: number,
@@ -132,6 +141,7 @@ export class PhaseExecutor {
     idea: string,
     onMessage: MessageCallback,
     onTyping?: TypingCallback,
+    onToolCall?: ToolCallCallback,
   ): Promise<void> {
     const history: ChatMessage[] = [];
     const leader = agents.find((a) => a.isLeader)!;
@@ -139,6 +149,18 @@ export class PhaseExecutor {
 
     const emitTyping = (agent: Agent, isTyping: boolean) =>
       onTyping?.(buildTypingPayload(groupId, agent, isTyping));
+
+    const makeToolCb =
+      (agent: Agent) =>
+      (toolName: string, toolInput: string, status: 'calling' | 'completed') =>
+        onToolCall?.({
+          groupId,
+          agentId: agent.character.id,
+          agentName: agent.character.name,
+          toolName,
+          toolInput,
+          status,
+        });
 
     // Step 1: Leader presents idea and proposes direction
     emitTyping(leader, true);
@@ -190,6 +212,7 @@ export class PhaseExecutor {
       const response = await agent.speak(
         history,
         `请选择之前讨论中的1-2个问题进行回答或补充你的看法。如果需要搜索市场数据，请用 [SEARCH:搜索关键词] 格式。`,
+        makeToolCb(agent),
       );
       emitTyping(agent, false);
       history.push({
@@ -236,6 +259,7 @@ export class PhaseExecutor {
     phase1Summary: string,
     onMessage: MessageCallback,
     onTyping?: TypingCallback,
+    onToolCall?: ToolCallCallback,
   ): Promise<BPDocument> {
     const history: ChatMessage[] = [
       { role: 'assistant', content: `[阶段1总结]: ${phase1Summary}` },
@@ -245,6 +269,18 @@ export class PhaseExecutor {
 
     const emitTyping = (agent: Agent, isTyping: boolean) =>
       onTyping?.(buildTypingPayload(groupId, agent, isTyping));
+
+    const makeToolCb =
+      (agent: Agent) =>
+      (toolName: string, toolInput: string, status: 'calling' | 'completed') =>
+        onToolCall?.({
+          groupId,
+          agentId: agent.character.id,
+          agentName: agent.character.name,
+          toolName,
+          toolInput,
+          status,
+        });
 
     // Step 1: Leader assigns tasks
     emitTyping(leader, true);
@@ -296,6 +332,7 @@ export class PhaseExecutor {
       const section = await member.speak(
         history,
         `现在请撰写你负责的BP板块内容。要求详实、有数据支撑。如果需要市场数据，请用 [SEARCH:关键词] 格式搜索。`,
+        makeToolCb(member),
       );
       emitTyping(member, false);
       history.push({

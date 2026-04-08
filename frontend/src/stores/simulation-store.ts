@@ -130,6 +130,24 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
             }
             break;
           }
+          case 'tool_call': {
+            const toolMsg: SimulationMessage = {
+              type: 'tool_call',
+              groupId: raw.groupId,
+              content: raw.status === 'calling'
+                ? `🔍 正在搜索：${raw.toolInput}...`
+                : `✅ 搜索完成：${raw.toolInput}`,
+              agent: {
+                id: raw.agentId ?? '',
+                name: raw.agentName ?? '',
+                avatar: getAvatarUrl(raw.agentId ?? ''),
+                role: '',
+                isLeader: false,
+              },
+            };
+            get().addMessage(toolMsg);
+            break;
+          }
           case 'phase_change':
             if (raw.phase !== undefined) {
               get().setPhase(raw.phase);

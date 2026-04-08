@@ -391,10 +391,26 @@ export function ChatSidebar() {
         ) : (
           <>
             {currentMessages
-              .filter((m) => m.type === 'message' && m.content)
-              .map((msg, idx) => (
-                <MessageItem key={idx} msg={msg} />
-              ))}
+              .filter((m) => (m.type === 'message' || m.type === 'tool_call') && m.content)
+              .map((msg, idx) =>
+                msg.type === 'tool_call' ? (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 px-3 py-2 text-xs"
+                    style={{
+                      fontFamily: 'var(--font-pixel-body)',
+                      color: '#A78BFA',
+                      backgroundColor: 'rgba(124, 58, 237, 0.06)',
+                      borderBottom: '1px solid rgba(124, 58, 237, 0.1)',
+                    }}
+                  >
+                    <span style={{ opacity: 0.7 }}>{msg.agent?.name}</span>
+                    <span>{msg.content}</span>
+                  </div>
+                ) : (
+                  <MessageItem key={idx} msg={msg} />
+                ),
+              )}
             {/* Typing indicator at bottom */}
             {currentTyping && <TypingIndicator agent={currentTyping} />}
             <div ref={messagesEndRef} />
