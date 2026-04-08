@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Trophy, ArrowLeft, Loader2 } from 'lucide-react';
 import { useSimulationStore } from '@/stores/simulation-store';
@@ -23,29 +23,28 @@ export default function ResultContent() {
   // Determine the simulation ID from URL query or store
   const simulationId = searchParams.get('id') || storeSimulationId;
 
+  const hasFetched = useRef(false);
   useEffect(() => {
-    // If we already have results, no need to fetch
-    if (storeResults.length > 0) return;
-
-    // If no simulation ID at all, redirect home
+    if (storeResults.length > 0 || hasFetched.current) return;
     if (!simulationId) {
       router.replace('/');
       return;
     }
+    hasFetched.current = true;
 
-    // Fetch results from API
-    setLoading(true);
+    let cancelled = false;
     api
       .getSimulationResult(simulationId)
       .then((data) => {
-        setResults(data.results);
+        if (!cancelled) setResults(data.results);
       })
       .catch(() => {
-        setError('无法加载结果数据');
+        if (!cancelled) setError('无法加载结果数据');
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       });
+    return () => { cancelled = true; };
   }, [simulationId, storeResults.length, setResults, router]);
 
   // Sort results by total score descending

@@ -28,13 +28,7 @@ export class PhaseExecutor {
     allCharacters: CharacterData[],
     ideas: string[],
   ): GroupAssignment[] {
-    const leaderTypes = new Set([
-      'ENTJ',
-      'ENFJ',
-      'ESTJ',
-      'ESTP',
-      'ENTP',
-    ]);
+    const leaderTypes = new Set(['ENTJ', 'ENFJ', 'ESTJ', 'ESTP', 'ENTP']);
     const backendTypes = new Set(['INTJ', 'INTP', 'ISTJ', 'ISTP']);
     const designerTypes = new Set(['ISFP', 'INFP', 'INFJ']);
     const marketingTypes = new Set(['ENFP', 'ESFP', 'ESFJ']);
@@ -62,10 +56,7 @@ export class PhaseExecutor {
         role = '设计师';
       } else if (marketingTypes.has(primaryType)) {
         role = '运营';
-      } else if (
-        primaryType.startsWith('E') ||
-        primaryType === 'ISFJ'
-      ) {
+      } else if (primaryType.startsWith('E') || primaryType === 'ISFJ') {
         role = '产品经理';
       } else {
         role = '前端工程师';
@@ -87,8 +78,7 @@ export class PhaseExecutor {
 
     for (let g = 0; g < groupCount; g++) {
       const start = g * groupSize;
-      const end =
-        g === groupCount - 1 ? withRoles.length : start + groupSize;
+      const end = g === groupCount - 1 ? withRoles.length : start + groupSize;
       const groupMembers = withRoles.slice(start, end);
 
       // Select leader (highest leaderScore)

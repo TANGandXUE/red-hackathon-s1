@@ -9,7 +9,7 @@ export class Semaphore {
       this.activeCalls++;
       return Promise.resolve();
     }
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.waitQueue.push(() => {
         this.activeCalls++;
         resolve();

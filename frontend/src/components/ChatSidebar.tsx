@@ -138,11 +138,7 @@ export function ChatSidebar() {
 
   const currentMessages = getMessagesForGroup(activeGroupTab);
 
-  // Update last-seen count when switching tabs
-  useEffect(() => {
-    const count = currentMessages.length;
-    setLastSeenCounts((prev) => ({ ...prev, [activeGroupTab]: count }));
-  }, [activeGroupTab, currentMessages.length]);
+  // Last-seen count is updated in handleTabClick when switching tabs
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {

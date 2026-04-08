@@ -1,4 +1,9 @@
-export type HackathonRole = '产品经理' | '前端工程师' | '后端工程师' | '设计师' | '运营';
+export type HackathonRole =
+  | '产品经理'
+  | '前端工程师'
+  | '后端工程师'
+  | '设计师'
+  | '运营';
 
 export interface GroupMember {
   characterId: string;
