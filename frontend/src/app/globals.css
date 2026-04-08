@@ -10,6 +10,8 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --font-pixel-display: var(--font-pixel-display);
+  --font-pixel-body: var(--font-pixel-body);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -127,4 +129,118 @@
   html {
     @apply font-sans;
   }
+}
+
+/* === HinH Pixel Art / Retro-Futurism Styles === */
+
+/* CRT scanline overlay */
+.crt-overlay {
+  position: relative;
+}
+
+.crt-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Neon glow for text */
+.neon-glow-purple {
+  text-shadow:
+    0 0 7px #7c3aed,
+    0 0 10px #7c3aed,
+    0 0 21px #7c3aed,
+    0 0 42px #a78bfa;
+}
+
+.neon-glow-rose {
+  text-shadow:
+    0 0 7px #f43f5e,
+    0 0 10px #f43f5e,
+    0 0 21px #f43f5e;
+}
+
+/* Pixel-style border */
+.pixel-border {
+  border: 3px solid #7c3aed;
+  box-shadow:
+    0 0 0 3px #0f0f23,
+    inset 0 0 12px rgba(124, 58, 237, 0.15);
+}
+
+.pixel-border-rose {
+  border: 3px solid #f43f5e;
+  box-shadow:
+    0 0 0 3px #0f0f23,
+    inset 0 0 12px rgba(244, 63, 94, 0.15);
+}
+
+/* Neon box glow on hover */
+.neon-box-glow:hover {
+  box-shadow:
+    0 0 8px #7c3aed,
+    0 0 16px rgba(124, 58, 237, 0.4),
+    inset 0 0 12px rgba(124, 58, 237, 0.15);
+}
+
+.neon-box-glow-rose:hover {
+  box-shadow:
+    0 0 12px #f43f5e,
+    0 0 24px rgba(244, 63, 94, 0.4),
+    inset 0 0 12px rgba(244, 63, 94, 0.15);
+}
+
+/* Pixel input focus glow */
+.pixel-input:focus {
+  border-color: #a78bfa;
+  box-shadow:
+    0 0 8px rgba(124, 58, 237, 0.6),
+    0 0 16px rgba(124, 58, 237, 0.3),
+    inset 0 0 12px rgba(124, 58, 237, 0.1);
+  outline: none;
+}
+
+/* Subtle pixel grid background */
+.pixel-grid-bg {
+  background-image:
+    linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Blinking cursor animation for retro feel */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.pixel-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Subtle pulse for the start button */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 8px #f43f5e,
+      0 0 16px rgba(244, 63, 94, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 12px #f43f5e,
+      0 0 28px rgba(244, 63, 94, 0.5);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
