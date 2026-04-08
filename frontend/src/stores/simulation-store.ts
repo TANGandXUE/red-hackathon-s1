@@ -92,8 +92,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
         switch (raw.type) {
           case 'message': {
-            // Clear typing indicator for this group when message arrives
-            get().setTypingAgent(raw.groupId, null);
+            // Note: typing indicator is cleared by the agent_typing(isTyping:false) event,
+            // which fires before the message event. No need to clear here.
 
             const msg: SimulationMessage = {
               type: 'message',
