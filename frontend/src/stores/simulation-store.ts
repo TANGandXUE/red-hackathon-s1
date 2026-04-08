@@ -76,15 +76,31 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
     es.onmessage = (event) => {
       try {
-        const msg: SimulationMessage = JSON.parse(event.data);
+        const raw = JSON.parse(event.data);
 
-        switch (msg.type) {
-          case 'message':
+        switch (raw.type) {
+          case 'message': {
+            // Transform backend flat format to frontend SimulationMessage
+            const msg: SimulationMessage = {
+              type: 'message',
+              groupId: raw.groupId,
+              phase: raw.phase,
+              content: raw.content,
+              agent: {
+                id: raw.agentId ?? raw.agent?.id ?? '',
+                name: raw.agentName ?? raw.agent?.name ?? '',
+                avatar: (raw.agentId ?? '').startsWith('judge')
+                  ? `/avatars/oc-1.jpeg`
+                  : `/avatars/oc-${(raw.agentId ?? '').match(/\d+/)?.[0] ?? '1'}.jpeg`,
+                role: raw.agentRole ?? raw.agent?.role ?? '',
+              },
+            };
             get().addMessage(msg);
             break;
+          }
           case 'phase_change':
-            if (msg.phase !== undefined) {
-              get().setPhase(msg.phase);
+            if (raw.phase !== undefined) {
+              get().setPhase(raw.phase);
             }
             break;
           case 'complete':
