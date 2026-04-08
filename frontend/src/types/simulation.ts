@@ -1,12 +1,3 @@
-export interface ToolCallEvent {
-  groupId: number;
-  agentId: string;
-  agentName: string;
-  toolName: string;
-  toolInput: string;
-  status: 'calling' | 'completed';
-}
-
 export interface SimulationMessage {
   type: 'message' | 'phase_change' | 'complete' | 'tool_call';
   groupId?: number;

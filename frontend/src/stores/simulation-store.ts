@@ -131,9 +131,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
             break;
           }
           case 'tool_call': {
+            const gid = raw.groupId as number;
             const toolMsg: SimulationMessage = {
               type: 'tool_call',
-              groupId: raw.groupId,
+              groupId: gid,
               content: raw.status === 'calling'
                 ? `🔍 正在搜索：${raw.toolInput}...`
                 : `✅ 搜索完成：${raw.toolInput}`,
@@ -145,7 +146,20 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
                 isLeader: false,
               },
             };
-            get().addMessage(toolMsg);
+            if (raw.status === 'completed') {
+              // Replace the 'calling' entry instead of appending
+              set((state) => {
+                const msgs = new Map(state.messages);
+                const arr = [...(msgs.get(gid) ?? [])];
+                const idx = arr.findLastIndex((m) => m.type === 'tool_call');
+                if (idx >= 0) arr[idx] = toolMsg;
+                else arr.push(toolMsg);
+                msgs.set(gid, arr);
+                return { messages: msgs };
+              });
+            } else {
+              get().addMessage(toolMsg);
+            }
             break;
           }
           case 'phase_change':

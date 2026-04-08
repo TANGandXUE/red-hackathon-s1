@@ -25,14 +25,13 @@ export type TypingCallback = (
   msg: AgentIdentity & { isTyping: boolean },
 ) => void;
 
-export type ToolCallCallback = (msg: {
-  groupId: number;
-  agentId: string;
-  agentName: string;
-  toolName: string;
-  toolInput: string;
-  status: 'calling' | 'completed';
-}) => void;
+export type ToolCallCallback = (
+  msg: Pick<AgentIdentity, 'groupId' | 'agentId' | 'agentName'> & {
+    toolName: string;
+    toolInput: string;
+    status: 'calling' | 'completed';
+  },
+) => void;
 
 /** Build a typing event payload from an Agent */
 export function buildTypingPayload(
@@ -48,6 +47,27 @@ export function buildTypingPayload(
     isLeader: agent.isLeader,
     isTyping,
   };
+}
+
+/** Build a per-agent tool call callback */
+export function buildToolCallCb(
+  groupId: number,
+  agent: Agent,
+  onToolCall?: ToolCallCallback,
+): (
+  toolName: string,
+  toolInput: string,
+  status: 'calling' | 'completed',
+) => void {
+  return (toolName, toolInput, status) =>
+    onToolCall?.({
+      groupId,
+      agentId: agent.character.id,
+      agentName: agent.character.name,
+      toolName,
+      toolInput,
+      status,
+    });
 }
 
 export class PhaseExecutor {
@@ -150,17 +170,8 @@ export class PhaseExecutor {
     const emitTyping = (agent: Agent, isTyping: boolean) =>
       onTyping?.(buildTypingPayload(groupId, agent, isTyping));
 
-    const makeToolCb =
-      (agent: Agent) =>
-      (toolName: string, toolInput: string, status: 'calling' | 'completed') =>
-        onToolCall?.({
-          groupId,
-          agentId: agent.character.id,
-          agentName: agent.character.name,
-          toolName,
-          toolInput,
-          status,
-        });
+    const makeToolCb = (agent: Agent) =>
+      buildToolCallCb(groupId, agent, onToolCall);
 
     // Step 1: Leader presents idea and proposes direction
     emitTyping(leader, true);
@@ -270,17 +281,8 @@ export class PhaseExecutor {
     const emitTyping = (agent: Agent, isTyping: boolean) =>
       onTyping?.(buildTypingPayload(groupId, agent, isTyping));
 
-    const makeToolCb =
-      (agent: Agent) =>
-      (toolName: string, toolInput: string, status: 'calling' | 'completed') =>
-        onToolCall?.({
-          groupId,
-          agentId: agent.character.id,
-          agentName: agent.character.name,
-          toolName,
-          toolInput,
-          status,
-        });
+    const makeToolCb = (agent: Agent) =>
+      buildToolCallCb(groupId, agent, onToolCall);
 
     // Step 1: Leader assigns tasks
     emitTyping(leader, true);
