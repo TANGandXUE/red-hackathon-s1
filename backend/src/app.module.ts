@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { getDatabaseConfig } from './config/database.config';
 import { LlmModule } from './modules/llm/llm.module';
 import { SearchModule } from './modules/search/search.module';
+import { SimulationModule } from './modules/simulation/simulation.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SearchModule } from './modules/search/search.module';
     }),
     LlmModule,
     SearchModule,
+    SimulationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
