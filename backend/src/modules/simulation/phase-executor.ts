@@ -8,24 +8,38 @@ import type {
 } from './interfaces/simulation.interfaces';
 import { Agent } from './agent';
 
-export type MessageCallback = (msg: {
+/** Shared identity fields for agent events */
+export interface AgentIdentity {
   groupId: number;
   agentId: string;
   agentName: string;
   agentRole: string;
   isLeader: boolean;
-  content: string;
-  phase: number;
-}) => Promise<void>;
+}
 
-export type TypingCallback = (msg: {
-  groupId: number;
-  agentId: string;
-  agentName: string;
-  agentRole: string;
-  isLeader: boolean;
-  isTyping: boolean;
-}) => void;
+export type MessageCallback = (
+  msg: AgentIdentity & { content: string; phase: number },
+) => Promise<void>;
+
+export type TypingCallback = (
+  msg: AgentIdentity & { isTyping: boolean },
+) => void;
+
+/** Build a typing event payload from an Agent */
+export function buildTypingPayload(
+  groupId: number,
+  agent: Agent,
+  isTyping: boolean,
+): AgentIdentity & { isTyping: boolean } {
+  return {
+    groupId,
+    agentId: agent.character.id,
+    agentName: agent.character.name,
+    agentRole: agent.role,
+    isLeader: agent.isLeader,
+    isTyping,
+  };
+}
 
 export class PhaseExecutor {
   constructor(
@@ -123,16 +137,8 @@ export class PhaseExecutor {
     const leader = agents.find((a) => a.isLeader)!;
     const members = agents.filter((a) => !a.isLeader);
 
-    const emitTyping = (agent: Agent, isTyping: boolean) => {
-      onTyping?.({
-        groupId,
-        agentId: agent.character.id,
-        agentName: agent.character.name,
-        agentRole: agent.role,
-        isLeader: agent.isLeader,
-        isTyping,
-      });
-    };
+    const emitTyping = (agent: Agent, isTyping: boolean) =>
+      onTyping?.(buildTypingPayload(groupId, agent, isTyping));
 
     // Step 1: Leader presents idea and proposes direction
     emitTyping(leader, true);
@@ -237,16 +243,8 @@ export class PhaseExecutor {
     const leader = agents.find((a) => a.isLeader)!;
     const members = agents.filter((a) => !a.isLeader);
 
-    const emitTyping = (agent: Agent, isTyping: boolean) => {
-      onTyping?.({
-        groupId,
-        agentId: agent.character.id,
-        agentName: agent.character.name,
-        agentRole: agent.role,
-        isLeader: agent.isLeader,
-        isTyping,
-      });
-    };
+    const emitTyping = (agent: Agent, isTyping: boolean) =>
+      onTyping?.(buildTypingPayload(groupId, agent, isTyping));
 
     // Step 1: Leader assigns tasks
     emitTyping(leader, true);

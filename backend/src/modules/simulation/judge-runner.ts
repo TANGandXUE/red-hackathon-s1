@@ -5,8 +5,19 @@ import type {
   JudgeScore,
 } from './interfaces/simulation.interfaces';
 import type { Agent } from './agent';
-import type { MessageCallback, TypingCallback } from './phase-executor';
+import {
+  buildTypingPayload,
+  type MessageCallback,
+  type TypingCallback,
+} from './phase-executor';
 import type { BPDocument } from './interfaces/simulation.interfaces';
+
+export const JUDGE_ROLE = '评委' as const;
+
+function buildJudgeSystemPrompt(judge: JudgeData): string {
+  return `【黑客松创业模拟游戏】你是游戏中的评委角色「${judge.name}」，${judge.title}。
+性格：${judge.personality}。评审风格：${judge.judgingStyle}。关注领域：${judge.focusAreas.join('、')}。`;
+}
 
 export class JudgeRunner {
   constructor(private llmService: LlmService) {}
@@ -22,33 +33,24 @@ export class JudgeRunner {
     const leader = agents.find((a) => a.isLeader)!;
     const history: ChatMessage[] = [];
 
-    const emitAgentTyping = (agent: Agent, isTyping: boolean) => {
-      onTyping?.({
-        groupId: group.groupId,
-        agentId: agent.character.id,
-        agentName: agent.character.name,
-        agentRole: agent.role,
-        isLeader: agent.isLeader,
-        isTyping,
-      });
-    };
+    const emitAgentTyping = (agent: Agent, isTyping: boolean) =>
+      onTyping?.(buildTypingPayload(group.groupId, agent, isTyping));
 
-    const emitJudgeTyping = (judge: JudgeData, isTyping: boolean) => {
+    const emitJudgeTyping = (judge: JudgeData, isTyping: boolean) =>
       onTyping?.({
         groupId: group.groupId,
         agentId: judge.id,
         agentName: judge.name,
-        agentRole: '评委',
+        agentRole: JUDGE_ROLE,
         isLeader: false,
         isTyping,
       });
-    };
 
     // Step 1: Leader presents BP
     emitAgentTyping(leader, true);
     const presentation = await leader.speak(
       history,
-      `你正在黑客松答辩现场，请基于以下项目成果向评委做3分钟的项目陈述：\n${JSON.stringify(bp, null, 2)}`,
+      `你正在黑客松答辩现场，请基于以下项目成果向评委做3分钟的项目陈述：\n${JSON.stringify(bp)}`,
     );
     emitAgentTyping(leader, false);
     history.push({
@@ -87,9 +89,7 @@ export class JudgeRunner {
     for (const judge of activeJudges) {
       emitJudgeTyping(judge, true);
       const question = await this.llmService.chat(
-        `【黑客松创业模拟游戏】你是游戏中的评委角色「${judge.name}」，${judge.title}。
-性格：${judge.personality}。评审风格：${judge.judgingStyle}。关注领域：${judge.focusAreas.join('、')}。
-以这位评委的视角，对参赛项目提出一个专业且尖锐的问题。不超过150字，使用中文，Markdown格式。`,
+        `${buildJudgeSystemPrompt(judge)}\n以这位评委的视角，对参赛项目提出一个专业且尖锐的问题。不超过150字，使用中文，Markdown格式。`,
         [
           ...history,
           { role: 'user', content: `请针对这个项目提出一个尖锐的问题。` },
@@ -104,7 +104,7 @@ export class JudgeRunner {
         groupId: group.groupId,
         agentId: judge.id,
         agentName: judge.name,
-        agentRole: '评委',
+        agentRole: JUDGE_ROLE,
         isLeader: false,
         content: question,
         phase: 3,
@@ -142,16 +142,14 @@ export class JudgeRunner {
 {"innovation":8,"presentation":7,"completeness":6,"businessPotential":8,"techDifficulty":7,"comment":"点评内容","suggestion":"改进建议"}
 只输出JSON。`;
         const scoreRaw = await this.llmService.chat(
-          `【黑客松创业模拟游戏】你是游戏中的评委角色「${judge.name}」，${judge.title}。
-性格：${judge.personality}。评审风格：${judge.judgingStyle}。关注：${judge.focusAreas.join('、')}。
-以这位评委的视角给出评分和专业点评，使用中文。`,
+          `${buildJudgeSystemPrompt(judge)}\n以这位评委的视角给出评分和专业点评，使用中文。`,
           [...history, { role: 'user', content: scorePrompt }],
         );
         await onMessage({
           groupId: group.groupId,
           agentId: judge.id,
           agentName: judge.name,
-          agentRole: '评委',
+          agentRole: JUDGE_ROLE,
           isLeader: false,
           content: scoreRaw,
           phase: 3,

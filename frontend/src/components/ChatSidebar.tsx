@@ -4,6 +4,9 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useSimulationStore } from '@/stores/simulation-store';
 import type { SimulationMessage, TypingAgent } from '@/types/simulation';
 import MarkdownContent from './MarkdownContent';
+import { getAvatarUrl } from '@/lib/avatar';
+
+export const JUDGE_ROLE = '评委' as const;
 
 const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
   产品经理: { bg: '#7C3AED', text: '#FFFFFF' },
@@ -11,21 +14,15 @@ const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
   后端工程师: { bg: '#10B981', text: '#FFFFFF' },
   设计师: { bg: '#F43F5E', text: '#FFFFFF' },
   运营: { bg: '#F59E0B', text: '#1A1A2E' },
-  评委: { bg: '#D4A017', text: '#1A1A2E' },
+  [JUDGE_ROLE]: { bg: '#D4A017', text: '#1A1A2E' },
 };
 
 function getRoleStyle(role: string) {
   return ROLE_COLORS[role] ?? { bg: '#4B5563', text: '#FFFFFF' };
 }
 
-function getAvatarUrl(agentId: string): string {
-  const match = agentId.match(/(\d+)/);
-  const num = match ? parseInt(match[1], 10) : 1;
-  return `/avatars/oc-${num}.jpeg`;
-}
-
 function isJudgeMessage(msg: SimulationMessage): boolean {
-  return msg.agent?.role === '评委';
+  return msg.agent?.role === JUDGE_ROLE;
 }
 
 interface MessageItemProps {

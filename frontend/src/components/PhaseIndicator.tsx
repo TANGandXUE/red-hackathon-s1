@@ -1,25 +1,18 @@
 'use client';
 
 const PHASES = [
-  { id: 0, label: '分组' },
-  { id: 1, label: '讨论' },
-  { id: 2, label: '创造' },
-  { id: 3, label: '答辩' },
+  { id: 0, short: '分组', full: '阶段 0 — 分组中...' },
+  { id: 1, short: '讨论', full: '阶段 1 — 自由讨论' },
+  { id: 2, short: '创造', full: '阶段 2 — 创造产品' },
+  { id: 3, short: '答辩', full: '阶段 3 — 评审答辩' },
 ];
-
-const PHASE_LABELS: Record<number, string> = {
-  0: '阶段 0 — 分组中...',
-  1: '阶段 1 — 自由讨论',
-  2: '阶段 2 — 创造产品',
-  3: '阶段 3 — 评审答辩',
-};
 
 interface PhaseIndicatorProps {
   currentPhase: number;
 }
 
 export function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
-  const label = PHASE_LABELS[currentPhase] ?? `阶段 ${currentPhase}`;
+  const label = PHASES.find((p) => p.id === currentPhase)?.full ?? `阶段 ${currentPhase}`;
 
   return (
     <div
@@ -104,7 +97,7 @@ export function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
                         : '#4A4A6A',
                     }}
                   >
-                    {phase.label}
+                    {phase.short}
                   </span>
                 </div>
                 {/* Connector line */}

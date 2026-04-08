@@ -7,6 +7,7 @@ import type {
 } from '@/types/simulation';
 import * as api from '@/services/api';
 import { API_URL } from '@/services/api';
+import { getAvatarUrl } from '@/lib/avatar';
 
 interface SimulationState {
   simulationId: string | null;
@@ -71,6 +72,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
   },
 
   setTypingAgent: (groupId: number, agent: TypingAgent | null) => {
+    const current = get().typingAgents.get(groupId) ?? null;
+    if (current?.agentId === agent?.agentId && !current === !agent) return;
     set((state) => {
       const next = new Map(state.typingAgents);
       next.set(groupId, agent);
@@ -103,9 +106,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
               agent: {
                 id: raw.agentId ?? raw.agent?.id ?? '',
                 name: raw.agentName ?? raw.agent?.name ?? '',
-                avatar: (raw.agentId ?? '').startsWith('judge')
-                  ? `/avatars/oc-1.jpeg`
-                  : `/avatars/oc-${(raw.agentId ?? '').match(/\d+/)?.[0] ?? '1'}.jpeg`,
+                avatar: getAvatarUrl(raw.agentId ?? ''),
                 role: raw.agentRole ?? raw.agent?.role ?? '',
                 isLeader: raw.isLeader ?? false,
               },
