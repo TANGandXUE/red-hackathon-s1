@@ -18,7 +18,8 @@ export class SearchService {
       this.cache.set(query, result);
       return result;
     } catch (error) {
-      this.logger.warn(`Search failed for "${query}": ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Search failed for "${query}": ${message}`);
       return `搜索"${query}"失败，请基于已有知识继续。`;
     } finally {
       this.release();

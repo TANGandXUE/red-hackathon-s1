@@ -21,7 +21,7 @@ export class Simulation {
   currentPhase: number;
 
   @Column({ default: 'running' })
-  status: string; // 'running' | 'completed'
+  status: 'running' | 'completed';
 
   @CreateDateColumn()
   createdAt: Date;

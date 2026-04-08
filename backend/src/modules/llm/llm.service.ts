@@ -17,8 +17,8 @@ export class LlmService {
 
   constructor(private configService: ConfigService) {
     this.client = new OpenAI({
-      baseURL: this.configService.get('LLM_BASE_URL'),
-      apiKey: this.configService.get('LLM_API_KEY'),
+      baseURL: this.configService.getOrThrow('LLM_BASE_URL'),
+      apiKey: this.configService.getOrThrow('LLM_API_KEY'),
     });
     this.model =
       this.configService.get('LLM_MODEL') || 'claude-haiku-4-5-20251001';
