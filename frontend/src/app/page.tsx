@@ -184,7 +184,6 @@ export default function Home() {
           backgroundColor: '#F43F5E',
           color: '#FFFFFF',
           borderColor: '#F43F5E',
-          ...(isLoading ? {} : {}),
         }}
         onMouseEnter={(e) => {
           if (!isLoading) {
