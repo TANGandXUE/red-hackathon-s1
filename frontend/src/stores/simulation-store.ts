@@ -78,7 +78,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
   setTypingAgent: (groupId: number, agent: TypingAgent | null) => {
     const current = get().typingAgents.get(groupId) ?? null;
-    if (current?.agentId === agent?.agentId && !current === !agent) return;
+    if (current?.agentId === agent?.agentId && !!current === !!agent) return;
     set((state) => {
       const next = new Map(state.typingAgents);
       next.set(groupId, agent);

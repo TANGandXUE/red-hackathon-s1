@@ -24,27 +24,18 @@ const PHASE_LABELS: Record<number, string> = {
 
 function StatusBar({
   currentPhase,
-  activatedCount,
-  totalCount,
+  agentCount,
 }: {
   currentPhase: number;
-  activatedCount: number;
-  totalCount: number;
+  agentCount: number;
 }) {
   const phaseLabel = PHASE_LABELS[currentPhase] ?? `PHASE ${currentPhase}`;
-  const statusText =
-    activatedCount < totalCount
-      ? 'ACTIVATING AGENTS...'
-      : totalCount > 0
-        ? 'ALL AGENTS ONLINE'
-        : 'AWAITING AGENTS';
+  const statusText = agentCount > 0 ? 'ALL AGENTS ONLINE' : 'AWAITING AGENTS';
 
   return (
     <div className="status-bar justify-between">
       <span>{phaseLabel}</span>
-      <span>
-        {activatedCount} / {totalCount} ACTIVATED
-      </span>
+      <span>{agentCount} AGENTS</span>
       <span>{statusText}</span>
     </div>
   );
@@ -128,11 +119,7 @@ export default function SimulationPage() {
       style={{ background: 'var(--rs-black)' }}
     >
       {/* Status bar */}
-      <StatusBar
-        currentPhase={currentPhase}
-        activatedCount={totalMembers}
-        totalCount={totalMembers}
-      />
+      <StatusBar currentPhase={currentPhase} agentCount={totalMembers} />
 
       {/* Phase indicator */}
       <PhaseIndicator currentPhase={currentPhase} />

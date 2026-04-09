@@ -6,7 +6,6 @@ import type { SimulationMessage, TypingAgent } from '@/types/simulation';
 import MarkdownContent from './MarkdownContent';
 import { getAvatarUrl } from '@/lib/avatar';
 
-export const JUDGE_ROLE = '评委' as const;
 
 interface MessageItemProps {
   msg: SimulationMessage;
