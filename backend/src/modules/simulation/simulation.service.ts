@@ -60,9 +60,13 @@ export class SimulationService {
     this.eventStreams.set(saved.id, subject);
 
     // 4. Start async simulation (don't await)
-    this.runSimulation(saved.id, groups).catch((err) =>
-      console.error('Simulation failed:', err),
-    );
+    this.runSimulation(saved.id, groups).catch((err) => {
+      console.error('Simulation failed:', err);
+      this.failSimulation(
+        saved.id,
+        err instanceof Error ? err.message : String(err),
+      );
+    });
 
     return { simulationId: saved.id };
   }
@@ -184,6 +188,18 @@ export class SimulationService {
     });
     subject?.complete();
     this.eventStreams.delete(simulationId);
+  }
+
+  private failSimulation(simulationId: string, errorMessage: string): void {
+    const subject = this.eventStreams.get(simulationId);
+    subject?.next({
+      data: JSON.stringify({ type: 'error', message: errorMessage }),
+    });
+    subject?.complete();
+    this.eventStreams.delete(simulationId);
+    this.simulationRepo.update(simulationId, {
+      status: 'failed' as const,
+    });
   }
 
   getStream(simulationId: string): Observable<MessageEvent> {

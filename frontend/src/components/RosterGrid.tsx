@@ -8,7 +8,7 @@ import {
   useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
-import type { GroupInfo } from '@/types/simulation';
+import type { GroupInfo, Track } from '@/types/simulation';
 import { getAvatarUrl } from '@/lib/avatar';
 
 /* ------------------------------------------------------------------ */
@@ -29,6 +29,7 @@ interface CellData {
   role: string;
   groupId: number;
   groupName: string;
+  track: Track;
   isLeader: boolean;
   initial: string;
   avatarUrl: string;
@@ -47,11 +48,15 @@ interface DetailPopup {
 const ACTIVATION_DELAY_MS = 80;
 const HOVER_DELAY_MS = 200;
 
+const TRACK_LABELS: Record<Track, string> = {
+  software: '软件赛道',
+  hardware: '硬件赛道',
+};
+
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/** Stable shuffle using a seed derived from characterId */
 function seededShuffle<T>(arr: T[], seed: number): T[] {
   const result = [...arr];
   let s = seed;
@@ -66,7 +71,6 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 function getInitial(name: string): string {
   return name.charAt(0).toUpperCase();
 }
-
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -91,7 +95,8 @@ export function RosterGrid({
           name: displayName,
           role: m.role,
           groupId: g.groupId,
-          groupName: `\u7EC4${g.groupId}`,
+          groupName: `组${g.groupId}`,
+          track: g.track,
           isLeader: m.isLeader,
           initial: getInitial(displayName),
           avatarUrl: getAvatarUrl(m.characterId),
@@ -101,10 +106,22 @@ export function RosterGrid({
     return all;
   }, [groups, agentNames]);
 
+  /* ------ split by track ------ */
+  const { softwareCells, hardwareCells } = useMemo(() => {
+    const sw: CellData[] = [];
+    const hw: CellData[] = [];
+    cells.forEach((c) => (c.track === 'software' ? sw : hw).push(c));
+    return { softwareCells: sw, hardwareCells: hw };
+  }, [cells]);
+
   /* ------ ordering: random in phase 0, grouped from phase 1 ------ */
-  const randomOrder = useMemo(
-    () => (cells.length ? seededShuffle(cells, 42) : []),
-    [cells],
+  const softwareRandom = useMemo(
+    () => seededShuffle(softwareCells, 42),
+    [softwareCells],
+  );
+  const hardwareRandom = useMemo(
+    () => seededShuffle(hardwareCells, 137),
+    [hardwareCells],
   );
 
   const groupedMap = useMemo(() => {
@@ -116,19 +133,6 @@ export function RosterGrid({
     });
     return byGroup;
   }, [cells]);
-
-  const groupedOrder = useMemo(() => {
-    return Array.from(groupedMap.values()).flat();
-  }, [groupedMap]);
-
-  /** O(1) index lookup for grouped cells (avoids indexOf O(n) per cell) */
-  const groupedIndexMap = useMemo(() => {
-    const map = new Map<string, number>();
-    groupedOrder.forEach((c, i) => map.set(c.characterId, i));
-    return map;
-  }, [groupedOrder]);
-
-  const displayOrder = currentPhase === 0 ? randomOrder : groupedOrder;
 
   /* ------ activation stagger (phase 0 reveal) ------ */
   const [activatedCount, setActivatedCount] = useState(0);
@@ -152,7 +156,6 @@ export function RosterGrid({
   const prevPositions = useRef(new Map<string, DOMRect>());
   const [shufflePhase, setShufflePhase] = useState<number>(-1);
 
-  // Capture positions before reorder
   useEffect(() => {
     if (currentPhase === 1 && shufflePhase < 1) {
       const positions = new Map<string, DOMRect>();
@@ -160,13 +163,10 @@ export function RosterGrid({
         positions.set(id, el.getBoundingClientRect());
       });
       prevPositions.current = positions;
-      requestAnimationFrame(() => {
-        setShufflePhase(1);
-      });
+      requestAnimationFrame(() => setShufflePhase(1));
     }
   }, [currentPhase, shufflePhase]);
 
-  // Apply FLIP after reorder
   useEffect(() => {
     if (shufflePhase !== 1) return;
     const prev = prevPositions.current;
@@ -179,7 +179,7 @@ export function RosterGrid({
       if (dx === 0 && dy === 0) return;
       el.style.transition = 'none';
       el.style.transform = `translate(${dx}px, ${dy}px)`;
-      el.getBoundingClientRect();
+      el.getBoundingClientRect(); // force reflow
       el.style.transition = 'transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       el.style.transform = 'translate(0, 0)';
     });
@@ -193,7 +193,7 @@ export function RosterGrid({
     return () => clearTimeout(timer);
   }, [shufflePhase]);
 
-  /* ------ hover detail card ------ */
+  /* ------ hover & flip ------ */
   const [detail, setDetail] = useState<DetailPopup | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
@@ -208,16 +208,9 @@ export function RosterGrid({
         const popupH = 140;
         let x = rect.right + 8;
         let y = rect.top;
-        if (x + popupW > vw) {
-          x = rect.left - popupW - 8;
-        }
-        if (x < 0) {
-          x = rect.left;
-          y = rect.bottom + 8;
-        }
-        if (y + popupH > vh) {
-          y = vh - popupH - 8;
-        }
+        if (x + popupW > vw) x = rect.left - popupW - 8;
+        if (x < 0) { x = rect.left; y = rect.bottom + 8; }
+        if (y + popupH > vh) y = vh - popupH - 8;
         setDetail({ cell, x, y });
       }, HOVER_DELAY_MS);
     },
@@ -236,7 +229,6 @@ export function RosterGrid({
     setFlippedId((prev) => (prev === id ? null : id));
   }, []);
 
-  /* ------ register cell ref ------ */
   const setCellRef = useCallback(
     (id: string) => (el: HTMLDivElement | null) => {
       if (el) cellRefs.current.set(id, el);
@@ -277,7 +269,7 @@ export function RosterGrid({
         onClick={() => handleCellClick(cell.characterId)}
       >
         <div className="card-inner">
-          {/* Front — card art image with gradient overlay */}
+          {/* Front */}
           <div className="card-front" style={{ overflow: 'hidden' }}>
             <img
               src={cell.avatarUrl}
@@ -291,44 +283,35 @@ export function RosterGrid({
                 objectFit: 'cover',
               }}
             />
-            {/* Bottom gradient overlay with name and role */}
             <div
               style={{
                 position: 'absolute',
                 bottom: 0,
                 left: 0,
                 right: 0,
-                padding: '24px 6px 6px',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+                padding: '28px 8px 8px',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 1,
+                gap: 2,
               }}
             >
               <span
                 className="font-display truncate font-bold"
-                style={{
-                  fontSize: 11,
-                  color: 'var(--rs-white)',
-                  lineHeight: 1.2,
-                }}
+                style={{ fontSize: 13, color: 'var(--rs-white)', lineHeight: 1.2 }}
               >
                 {cell.name}
               </span>
               <span
                 className="font-mono truncate uppercase"
-                style={{
-                  fontSize: 8,
-                  color: 'var(--rs-gray-light)',
-                  letterSpacing: 1,
-                }}
+                style={{ fontSize: 9, color: 'var(--rs-gray-light)', letterSpacing: 1 }}
               >
                 {cell.role}
               </span>
             </div>
           </div>
 
-          {/* Back — blurred card art with info overlay */}
+          {/* Back */}
           <div className="card-back" style={{ overflow: 'hidden' }}>
             <img
               src={cell.avatarUrl}
@@ -352,27 +335,27 @@ export function RosterGrid({
                 flexDirection: 'column',
                 justifyContent: 'center',
                 height: '100%',
-                padding: 8,
-                gap: 3,
+                padding: 10,
+                gap: 4,
               }}
             >
               <span
                 className="font-display font-bold"
-                style={{ fontSize: 12, color: 'var(--rs-white)' }}
+                style={{ fontSize: 14, color: 'var(--rs-white)' }}
               >
                 {cell.name}
               </span>
               <span
                 className="font-mono uppercase"
-                style={{ fontSize: 8, color: 'var(--rs-gray-light)' }}
+                style={{ fontSize: 9, color: 'var(--rs-gray-light)' }}
               >
                 {cell.role} &middot; {cell.characterId}
               </span>
-              <span style={{ fontSize: 8, color: 'var(--rs-white)' }}>
+              <span style={{ fontSize: 9, color: 'var(--rs-white)' }}>
                 {cell.isLeader ? '\u2605 Leader' : 'Member'}
               </span>
-              <span style={{ fontSize: 8, color: 'var(--rs-gray-light)' }}>
-                {cell.groupName}
+              <span style={{ fontSize: 9, color: 'var(--rs-gray-light)' }}>
+                {cell.groupName} &middot; {TRACK_LABELS[cell.track]}
               </span>
             </div>
           </div>
@@ -381,84 +364,96 @@ export function RosterGrid({
     );
   };
 
-  /* ------ empty state ------ */
-  if (cells.length === 0) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <span
-          className="font-mono uppercase"
-          style={{ fontSize: 11, color: 'var(--rs-gray)', letterSpacing: 3 }}
-        >
-          Awaiting roster data...
-        </span>
-      </div>
-    );
-  }
+  /* ------ render a track column ------ */
+  const renderTrackColumn = (
+    track: Track,
+    trackCells: CellData[],
+    randomCells: CellData[],
+    startIndex: number,
+  ) => {
+    const isPhase0 = currentPhase === 0;
+    const displayCells = isPhase0 ? randomCells : trackCells;
 
-  /* ------ Phase 0: single flat grid ------ */
-  if (currentPhase === 0) {
+    // Groups belonging to this track (for phase 1+)
+    const trackGroups = Array.from(groupedMap.entries())
+      .filter(([, members]) => members[0]?.track === track);
+
     return (
-      <div className="h-full w-full overflow-auto p-3">
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Track header */}
         <div
-          className="grid gap-1"
+          className="font-mono flex shrink-0 items-center gap-2 px-3 py-2 uppercase"
           style={{
-            gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+            fontSize: 11,
+            letterSpacing: 3,
+            color: 'var(--rs-gray-light)',
+            borderBottom: '1px solid var(--rs-gray-dark)',
           }}
         >
-          {displayOrder.map((c, i) => renderCell(c, i))}
+          <span
+            style={{
+              display: 'inline-block',
+              width: 6,
+              height: 6,
+              background: track === 'software' ? 'var(--rs-white)' : 'var(--rs-gray)',
+            }}
+          />
+          {TRACK_LABELS[track]}
+          <span style={{ color: 'var(--rs-gray)', fontSize: 10 }}>
+            {trackCells.length}
+          </span>
         </div>
 
-        {/* Hover detail portal */}
-        {renderDetailPortal()}
+        {/* Cards area */}
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-3">
+          {isPhase0 ? (
+            /* Phase 0: flat random grid */
+            <div
+              className="grid gap-1.5"
+              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}
+            >
+              {displayCells.map((c, i) => renderCell(c, startIndex + i))}
+            </div>
+          ) : (
+            /* Phase 1+: grouped sections */
+            <div className="flex flex-col gap-5">
+              {trackGroups.map(([groupId, members]) => {
+                const isActive = activeGroupId === groupId;
+                return (
+                  <div key={groupId}>
+                    <div
+                      className="font-mono mb-1.5 uppercase"
+                      style={{
+                        fontSize: 10,
+                        letterSpacing: 2,
+                        color: isActive ? 'var(--rs-white)' : 'var(--rs-gray)',
+                      }}
+                    >
+                      组 {groupId}
+                    </div>
+                    <div
+                      className="grid gap-1.5"
+                      style={{
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                        border: isActive ? '1px solid var(--rs-gray)' : '1px solid transparent',
+                        padding: 4,
+                      }}
+                    >
+                      {members.map((c) => {
+                        // Use a global index for activation
+                        const globalIdx = cells.indexOf(c);
+                        return renderCell(c, globalIdx);
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     );
-  }
-
-  /* ------ Phase >= 1: grouped layout ------ */
-  const groupEntries = Array.from(groupedMap.entries());
-
-  return (
-    <div className="h-full w-full overflow-auto p-3">
-      <div className="flex flex-col gap-6">
-        {groupEntries.map(([groupId, members]) => {
-          const isActive = activeGroupId === groupId;
-          return (
-            <div key={groupId}>
-              {/* Group label */}
-              <div
-                className="font-mono mb-2 uppercase"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: 3,
-                  color: isActive ? 'var(--rs-white)' : 'var(--rs-gray)',
-                }}
-              >
-                {`\u7EC4 ${groupId}`}
-              </div>
-              {/* Group grid */}
-              <div
-                className="grid gap-1"
-                style={{
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-                  border: isActive ? '1px solid var(--rs-gray)' : '1px solid transparent',
-                  borderRadius: 4,
-                  padding: isActive ? 4 : 4,
-                }}
-              >
-                {members.map((c) => {
-                  const globalIdx = groupedIndexMap.get(c.characterId) ?? 0;
-                  return renderCell(c, globalIdx);
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Hover detail portal */}
-      {renderDetailPortal()}
-    </div>
-  );
+  };
 
   /* ------ detail portal helper ------ */
   function renderDetailPortal() {
@@ -479,22 +474,42 @@ export function RosterGrid({
           {detail.cell.isLeader ? ' \u00B7 Leader' : ''}
         </p>
         <p style={{ fontSize: 11, color: 'var(--rs-gray)' }}>
-          {detail.cell.groupName}
+          {detail.cell.groupName} &middot; {TRACK_LABELS[detail.cell.track]}
         </p>
         {speakingAgentId === detail.cell.characterId && (
           <p
             className="font-mono mt-2 uppercase"
-            style={{
-              fontSize: 9,
-              color: 'var(--rs-white)',
-              letterSpacing: 2,
-            }}
+            style={{ fontSize: 9, color: 'var(--rs-white)', letterSpacing: 2 }}
           >
-            \u25CF Speaking
+            ● Speaking
           </p>
         )}
       </div>,
       document.body,
     );
   }
+
+  /* ------ empty state ------ */
+  if (cells.length === 0) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <span
+          className="font-mono uppercase"
+          style={{ fontSize: 11, color: 'var(--rs-gray)', letterSpacing: 3 }}
+        >
+          Awaiting roster data...
+        </span>
+      </div>
+    );
+  }
+
+  /* ------ main render: two-column track layout ------ */
+  return (
+    <div className="flex h-full w-full">
+      {renderTrackColumn('software', softwareCells, softwareRandom, 0)}
+      <div style={{ width: 1, background: 'var(--rs-gray-dark)', flexShrink: 0 }} />
+      {renderTrackColumn('hardware', hardwareCells, hardwareRandom, softwareCells.length)}
+      {renderDetailPortal()}
+    </div>
+  );
 }

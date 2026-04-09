@@ -21,6 +21,8 @@ export class LlmService {
     this.client = new OpenAI({
       baseURL: this.configService.getOrThrow('LLM_BASE_URL'),
       apiKey: this.configService.getOrThrow('LLM_API_KEY'),
+      timeout: Number(this.configService.get('LLM_TIMEOUT_MS', 120_000)),
+      maxRetries: Number(this.configService.get('LLM_MAX_RETRIES', 2)),
     });
     this.model =
       this.configService.get('LLM_MODEL') || 'claude-haiku-4-5-20251001';

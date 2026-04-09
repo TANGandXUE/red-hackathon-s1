@@ -1,5 +1,5 @@
 export interface SimulationMessage {
-  type: 'message' | 'phase_change' | 'complete' | 'tool_call';
+  type: 'message' | 'phase_change' | 'complete' | 'tool_call' | 'error';
   groupId?: number;
   agent?: {
     id: string;
@@ -22,9 +22,12 @@ export interface TypingAgent {
   startedAt: number; // Date.now()
 }
 
+export type Track = 'software' | 'hardware';
+
 export interface GroupInfo {
   groupId: number;
   idea: string;
+  track: Track;
   members: {
     characterId: string;
     role: string;

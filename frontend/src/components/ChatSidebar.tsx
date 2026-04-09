@@ -263,7 +263,7 @@ export function ChatSidebar() {
     >
       {/* Group Tabs */}
       <div
-        className="flex shrink-0 overflow-x-auto"
+        className="custom-scrollbar flex shrink-0 overflow-x-auto"
         style={{ borderBottom: '1px solid var(--rs-gray-dark)' }}
       >
         {groupIds.length === 0 ? (
@@ -346,7 +346,7 @@ export function ChatSidebar() {
       </div>
 
       {/* Messages list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="custom-scrollbar flex-1 overflow-y-auto">
         {currentMessages.length === 0 && !currentTyping ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">

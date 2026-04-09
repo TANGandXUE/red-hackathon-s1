@@ -17,6 +17,7 @@ interface SimulationState {
   results: GroupResult[];
   activeGroupTab: number;
   isRunning: boolean;
+  error: string | null;
   eventSource: EventSource | null;
   /** Per-group currently-typing agent (null = no one typing) */
   typingAgents: Map<number, TypingAgent | null>;
@@ -41,12 +42,13 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
   results: [],
   activeGroupTab: 1,
   isRunning: false,
+  error: null,
   eventSource: null,
   typingAgents: new Map(),
 
   startSimulation: async (ideas: string[]) => {
     const { simulationId } = await api.startSimulation(ideas);
-    set({ simulationId, isRunning: true, messages: new Map(), results: [], currentPhase: 1, activeGroupTab: 1, typingAgents: new Map() });
+    set({ simulationId, isRunning: true, error: null, messages: new Map(), results: [], currentPhase: 1, activeGroupTab: 1, typingAgents: new Map() });
     get().connectSSE(simulationId);
   },
 
@@ -180,6 +182,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
               }
             }
             break;
+          case 'error':
+            set({ error: raw.message || '模拟过程中发生错误', isRunning: false, typingAgents: new Map() });
+            get().disconnect();
+            break;
           case 'complete':
             api.getSimulationResult(simulationId).then((result) => {
               get().setResults(result.results);
@@ -195,7 +201,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
     es.onerror = () => {
       get().disconnect();
-      set({ isRunning: false });
+      set({ isRunning: false, error: '与服务器的连接已断开', typingAgents: new Map() });
     };
 
     set({ eventSource: es });
@@ -229,6 +235,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
       results: [],
       activeGroupTab: 1,
       isRunning: false,
+      error: null,
       eventSource: null,
       typingAgents: new Map(),
     });

@@ -140,8 +140,8 @@ export default function SimulationPage() {
 
       {/* Main content: roster + chat */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel: Roster Grid (~60%) */}
-        <div className="w-[65%] overflow-auto">
+        {/* Left panel: Roster Grid (~65%) */}
+        <div className="w-[65%] overflow-hidden">
           <RosterGrid
             groups={groups}
             currentPhase={currentPhase}

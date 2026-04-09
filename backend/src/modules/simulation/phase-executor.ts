@@ -5,6 +5,7 @@ import type {
   GroupAssignment,
   BPDocument,
   HackathonRole,
+  Track,
 } from './interfaces/simulation.interfaces';
 import { Agent } from './agent';
 
@@ -79,84 +80,83 @@ export class PhaseExecutor {
     private searchService: SearchService,
   ) {}
 
+  /** Determine track by character ID: oc-1~20 = software, oc-21~40 = hardware */
+  private getTrack(character: CharacterData): Track {
+    const num = parseInt(character.id.replace(/\D/g, ''), 10);
+    return num <= 20 ? 'software' : 'hardware';
+  }
+
   // Phase 0: Algorithm-based grouping (NO LLM calls)
+  // Groups are formed within each track (software / hardware) separately.
   executePhase0(
     allCharacters: CharacterData[],
     ideas: string[],
   ): GroupAssignment[] {
-    const groupCount = Math.ceil(allCharacters.length / TARGET_GROUP_SIZE);
-
     const leaderTypes = new Set(['ENTJ', 'ENFJ', 'ESTJ', 'ESTP', 'ENTP']);
     const backendTypes = new Set(['INTJ', 'INTP', 'ISTJ', 'ISTP']);
     const designerTypes = new Set(['ISFP', 'INFP', 'INFJ']);
     const marketingTypes = new Set(['ENFP', 'ESFP', 'ESFJ']);
 
     // Assign roles based on personality traits
-    const withRoles: {
-      character: CharacterData;
-      role: HackathonRole;
-      leaderScore: number;
-    }[] = allCharacters.map((c) => {
+    const withRoles = allCharacters.map((c) => {
       const primaryType = c.personality[0] || '';
       let role: HackathonRole = '运营';
       let leaderScore = 0;
 
-      if (leaderTypes.has(primaryType)) {
-        leaderScore = 3;
-      }
-      if (c.personality.some((p) => leaderTypes.has(p))) {
+      if (leaderTypes.has(primaryType)) leaderScore = 3;
+      if (c.personality.some((p) => leaderTypes.has(p)))
         leaderScore = Math.max(leaderScore, 2);
-      }
 
-      if (backendTypes.has(primaryType)) {
-        role = '后端工程师';
-      } else if (designerTypes.has(primaryType)) {
-        role = '设计师';
-      } else if (marketingTypes.has(primaryType)) {
-        role = '运营';
-      } else if (primaryType.startsWith('E') || primaryType === 'ISFJ') {
+      if (backendTypes.has(primaryType)) role = '后端工程师';
+      else if (designerTypes.has(primaryType)) role = '设计师';
+      else if (marketingTypes.has(primaryType)) role = '运营';
+      else if (primaryType.startsWith('E') || primaryType === 'ISFJ')
         role = '产品经理';
-      } else {
-        role = '前端工程师';
+      else role = '前端工程师';
+
+      return { character: c, role, leaderScore, track: this.getTrack(c) };
+    });
+
+    // Split by track, shuffle each independently
+    const tracks: Track[] = ['software', 'hardware'];
+    const allGroups: GroupAssignment[] = [];
+    let groupIdCounter = 1;
+
+    for (const track of tracks) {
+      const pool = withRoles.filter((w) => w.track === track);
+      // Shuffle
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
       }
 
-      return { character: c, role, leaderScore };
-    });
+      const groupCount = Math.ceil(pool.length / TARGET_GROUP_SIZE);
+      const buckets: (typeof pool)[] = Array.from(
+        { length: groupCount },
+        () => [],
+      );
+      for (let i = 0; i < pool.length; i++) {
+        buckets[i % groupCount].push(pool[i]);
+      }
 
-    // Shuffle
-    for (let i = withRoles.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [withRoles[i], withRoles[j]] = [withRoles[j], withRoles[i]];
+      for (const bucket of buckets) {
+        bucket.sort((a, b) => b.leaderScore - a.leaderScore);
+        const ideaIndex = Math.min(groupIdCounter - 1, ideas.length - 1);
+
+        allGroups.push({
+          groupId: groupIdCounter++,
+          idea: ideas[ideaIndex],
+          track,
+          members: bucket.map((m, idx) => ({
+            characterId: m.character.id,
+            role: idx === 0 ? '产品经理' : m.role,
+            isLeader: idx === 0,
+          })),
+        });
+      }
     }
 
-    // Round-robin distribution into groups
-    const buckets: (typeof withRoles)[] = Array.from(
-      { length: groupCount },
-      () => [],
-    );
-    for (let i = 0; i < withRoles.length; i++) {
-      buckets[i % groupCount].push(withRoles[i]);
-    }
-
-    // Build GroupAssignment[] — elect 1 leader per group
-    const groups: GroupAssignment[] = buckets.map((bucket, g) => {
-      // Sort by leaderScore desc so index 0 is the leader
-      bucket.sort((a, b) => b.leaderScore - a.leaderScore);
-
-      const ideaIndex = Math.min(g, ideas.length - 1);
-
-      return {
-        groupId: g + 1,
-        idea: ideas[ideaIndex],
-        members: bucket.map((m, idx) => ({
-          characterId: m.character.id,
-          role: idx === 0 ? '产品经理' : m.role,
-          isLeader: idx === 0,
-        })),
-      };
-    });
-
-    return groups;
+    return allGroups;
   }
 
   // Phase 1: Free Discussion

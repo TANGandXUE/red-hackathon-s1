@@ -11,9 +11,12 @@ export interface GroupMember {
   isLeader: boolean;
 }
 
+export type Track = 'software' | 'hardware';
+
 export interface GroupAssignment {
   groupId: number;
   idea: string;
+  track: Track;
   members: GroupMember[];
 }
 
