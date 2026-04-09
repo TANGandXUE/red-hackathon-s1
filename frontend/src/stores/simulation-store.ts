@@ -24,6 +24,7 @@ interface SimulationState {
   startSimulation: (ideas: string[]) => Promise<void>;
   addMessage: (msg: SimulationMessage) => void;
   setPhase: (phase: number) => void;
+  setGroups: (groups: GroupInfo[]) => void;
   setResults: (results: GroupResult[]) => void;
   setActiveGroupTab: (tab: number) => void;
   setTypingAgent: (groupId: number, agent: TypingAgent | null) => void;
@@ -61,6 +62,10 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
   setPhase: (phase: number) => {
     set({ currentPhase: phase });
+  },
+
+  setGroups: (groups: GroupInfo[]) => {
+    set({ groups });
   },
 
   setResults: (results: GroupResult[]) => {
@@ -165,6 +170,14 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
           case 'phase_change':
             if (raw.phase !== undefined) {
               get().setPhase(raw.phase);
+              // Fetch groups data when phase changes (groups assigned in phase 0)
+              if (get().groups.length === 0) {
+                api.getSimulationStatus(simulationId).then((status) => {
+                  if (status.groups?.length) {
+                    get().setGroups(status.groups);
+                  }
+                }).catch(() => { /* ignore */ });
+              }
             }
             break;
           case 'complete':
