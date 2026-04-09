@@ -31,7 +31,6 @@ interface CellData {
   groupName: string;
   track: Track;
   isLeader: boolean;
-  initial: string;
   avatarUrl: string;
 }
 
@@ -69,9 +68,6 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
   return result;
 }
 
-function getInitial(name: string): string {
-  return name.charAt(0).toUpperCase();
-}
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -99,7 +95,6 @@ export function RosterGrid({
           groupName: `组${g.groupId}`,
           track: g.track,
           isLeader: m.isLeader,
-          initial: getInitial(displayName),
           avatarUrl: getAvatarUrl(m.characterId),
         });
       });
@@ -155,7 +150,11 @@ export function RosterGrid({
       });
       prevPositions.current = positions;
       // Use rAF to let the DOM update to grouped layout before measuring new positions
-      requestAnimationFrame(() => setFlipState('captured'));
+      let cancelled = false;
+      requestAnimationFrame(() => {
+        if (!cancelled) setFlipState('captured');
+      });
+      return () => { cancelled = true; };
     }
   }, [currentPhase, flipState]);
 

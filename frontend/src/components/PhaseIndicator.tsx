@@ -21,7 +21,7 @@ export function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
       className="w-full"
       style={{
         backgroundColor: 'var(--tk-bg)',
-        borderBottom: '1px solid rgba(63,209,231,0.15)',
+        borderBottom: '1px solid var(--tk-cyan-15)',
       }}
     >
       <div className="flex items-center gap-4 px-6 py-3">

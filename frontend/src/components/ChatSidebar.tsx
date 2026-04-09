@@ -21,7 +21,7 @@ function MessageItem({ msg }: MessageItemProps) {
     <div
       className="flex gap-3 px-3 py-3 transition-colors"
       style={{
-        borderBottom: '1px solid rgba(63,209,231,0.1)',
+        borderBottom: '1px solid var(--tk-cyan-10)',
         backgroundColor: 'transparent',
       }}
     >
@@ -29,7 +29,7 @@ function MessageItem({ msg }: MessageItemProps) {
       <div
         className="h-8 w-8 shrink-0 overflow-hidden"
         style={{
-          border: '1px solid rgba(63,209,231,0.2)',
+          border: '1px solid var(--tk-cyan-20)',
           borderRadius: '0px',
         }}
       >
@@ -76,7 +76,7 @@ function MessageItem({ msg }: MessageItemProps) {
             className="shrink-0 px-1.5 py-0.5 text-xs"
             style={{
               fontFamily: 'var(--rs-font-mono)',
-              backgroundColor: 'rgba(63,209,231,0.1)',
+              backgroundColor: 'var(--tk-cyan-10)',
               color: 'var(--tk-cyan)',
               fontSize: '0.65rem',
               letterSpacing: '1px',
@@ -109,7 +109,7 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
     <div
       className="flex gap-3 px-3 py-3"
       style={{
-        borderBottom: '1px solid rgba(63,209,231,0.1)',
+        borderBottom: '1px solid var(--tk-cyan-10)',
         backgroundColor: 'transparent',
       }}
     >
@@ -117,7 +117,7 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
       <div
         className="h-8 w-8 shrink-0 overflow-hidden"
         style={{
-          border: '1px solid rgba(63,209,231,0.2)',
+          border: '1px solid var(--tk-cyan-20)',
           borderRadius: '0px',
         }}
       >
@@ -160,7 +160,7 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
             className="shrink-0 px-1.5 py-0.5"
             style={{
               fontFamily: 'var(--rs-font-mono)',
-              backgroundColor: 'rgba(63,209,231,0.1)',
+              backgroundColor: 'var(--tk-cyan-10)',
               color: 'var(--tk-cyan)',
               fontSize: '0.65rem',
               letterSpacing: '1px',
@@ -264,7 +264,7 @@ export function ChatSidebar() {
       {/* Group Tabs */}
       <div
         className="custom-scrollbar flex shrink-0 overflow-x-auto"
-        style={{ borderBottom: '1px solid rgba(63,209,231,0.15)' }}
+        style={{ borderBottom: '1px solid var(--tk-cyan-15)' }}
       >
         {groupIds.length === 0 ? (
           <div
@@ -303,7 +303,7 @@ export function ChatSidebar() {
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.borderColor = 'rgba(63,209,231,0.4)';
+                  e.currentTarget.style.borderColor = 'var(--tk-cyan-40)';
                 }
               }}
               onMouseLeave={(e) => {
@@ -390,7 +390,7 @@ export function ChatSidebar() {
                       fontFamily: 'var(--rs-font-mono)',
                       color: 'var(--rs-gray)',
                       backgroundColor: 'var(--tk-msg-bg)',
-                      borderBottom: '1px solid rgba(63,209,231,0.1)',
+                      borderBottom: '1px solid var(--tk-cyan-10)',
                     }}
                   >
                     <span style={{ opacity: 0.7 }}>{msg.agent?.name}</span>
