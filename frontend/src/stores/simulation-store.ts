@@ -48,7 +48,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
 
   startSimulation: async (ideas: string[]) => {
     const { simulationId } = await api.startSimulation(ideas);
-    set({ simulationId, isRunning: true, error: null, messages: new Map(), results: [], currentPhase: 1, activeGroupTab: 1, typingAgents: new Map() });
+    set({ simulationId, isRunning: true, error: null, messages: new Map(), results: [], groups: [], currentPhase: 0, activeGroupTab: 1, typingAgents: new Map() });
     get().connectSSE(simulationId);
   },
 
