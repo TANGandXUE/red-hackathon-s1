@@ -44,11 +44,7 @@ export class SimulationService {
       this.llmService,
       this.searchService,
     );
-    const groupCount = this.configService.get<number>(
-      'SIMULATION_GROUP_COUNT',
-      4,
-    );
-    const groups = phaseExecutor.executePhase0(characters, ideas, groupCount);
+    const groups = phaseExecutor.executePhase0(characters, ideas);
 
     // 2. Save to DB
     const simulation = this.simulationRepo.create({
