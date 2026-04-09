@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import type { GroupInfo } from '@/types/simulation';
+import { getAvatarUrl } from '@/lib/avatar';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -66,11 +67,6 @@ function getInitial(name: string): string {
   return name.charAt(0).toUpperCase();
 }
 
-function getAvatarUrl(characterId: string): string {
-  const parts = characterId.split('-');
-  const suffix = parts.length > 1 ? parts[1] : parts[0];
-  return `/avatars/oc-${suffix}.webp`;
-}
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -124,6 +120,13 @@ export function RosterGrid({
   const groupedOrder = useMemo(() => {
     return Array.from(groupedMap.values()).flat();
   }, [groupedMap]);
+
+  /** O(1) index lookup for grouped cells (avoids indexOf O(n) per cell) */
+  const groupedIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    groupedOrder.forEach((c, i) => map.set(c.characterId, i));
+    return map;
+  }, [groupedOrder]);
 
   const displayOrder = currentPhase === 0 ? randomOrder : groupedOrder;
 
@@ -443,7 +446,7 @@ export function RosterGrid({
                 }}
               >
                 {members.map((c) => {
-                  const globalIdx = groupedOrder.indexOf(c);
+                  const globalIdx = groupedIndexMap.get(c.characterId) ?? 0;
                   return renderCell(c, globalIdx);
                 })}
               </div>

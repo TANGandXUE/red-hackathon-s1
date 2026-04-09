@@ -105,8 +105,6 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
     return () => clearInterval(interval);
   }, [agent.startedAt]);
 
-  const avatarNum = agent.agentId.match(/\d+/)?.[0] ?? '1';
-
   return (
     <div
       className="flex gap-3 px-3 py-3"
@@ -124,7 +122,7 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
         }}
       >
         <img
-          src={`/avatars/oc-${avatarNum}.jpeg`}
+          src={getAvatarUrl(agent.agentId)}
           alt={agent.agentName}
           className="h-full w-full object-cover"
           style={{ opacity: 0.7 }}

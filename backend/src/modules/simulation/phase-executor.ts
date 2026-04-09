@@ -70,6 +70,9 @@ export function buildToolCallCb(
     });
 }
 
+/** Target members per group (groups will have 3-6 members via round-robin) */
+const TARGET_GROUP_SIZE = 5;
+
 export class PhaseExecutor {
   constructor(
     private llmService: LlmService,
@@ -81,7 +84,7 @@ export class PhaseExecutor {
     allCharacters: CharacterData[],
     ideas: string[],
   ): GroupAssignment[] {
-    const groupCount = Math.ceil(allCharacters.length / 5);
+    const groupCount = Math.ceil(allCharacters.length / TARGET_GROUP_SIZE);
 
     const leaderTypes = new Set(['ENTJ', 'ENFJ', 'ESTJ', 'ESTP', 'ENTP']);
     const backendTypes = new Set(['INTJ', 'INTP', 'ISTJ', 'ISTP']);
