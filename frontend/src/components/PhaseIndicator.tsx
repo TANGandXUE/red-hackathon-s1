@@ -20,8 +20,8 @@ export function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
     <div
       className="w-full"
       style={{
-        backgroundColor: 'var(--rs-black)',
-        borderBottom: '1px solid var(--rs-gray-dark)',
+        backgroundColor: 'var(--tk-bg)',
+        borderBottom: '1px solid var(--tk-cyan-15)',
       }}
     >
       <div className="flex items-center gap-4 px-6 py-3">
@@ -30,7 +30,7 @@ export function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
           <span
             className="absolute inline-flex h-full w-full"
             style={{
-              backgroundColor: 'var(--rs-white)',
+              backgroundColor: 'var(--tk-cyan)',
               animation: 'pulse 2s ease-in-out infinite',
               opacity: 0.5,
               borderRadius: '0px',
@@ -39,7 +39,7 @@ export function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
           <span
             className="relative inline-flex h-2 w-2"
             style={{
-              backgroundColor: 'var(--rs-white)',
+              backgroundColor: 'var(--tk-cyan)',
               borderRadius: '0px',
             }}
           />
@@ -86,10 +86,10 @@ export function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
                   width: '8px',
                   height: '8px',
                   backgroundColor: isDone
-                    ? 'var(--rs-white)'
+                    ? 'var(--tk-cyan)'
                     : 'var(--rs-gray-dark)',
                   border: isCurrent
-                    ? '1px solid var(--rs-white)'
+                    ? '1px solid var(--tk-cyan)'
                     : '1px solid transparent',
                   borderRadius: '0px',
                 }}

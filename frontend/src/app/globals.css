@@ -140,6 +140,19 @@
   --rs-gray-light: #888888;
   --rs-font-display: 'Space Grotesk', sans-serif;
   --rs-font-mono: 'JetBrains Mono', monospace;
+
+  /* Tekken8 accent colors */
+  --tk-bg: #020108;
+  --tk-cyan: #3fd1e7;
+  --tk-cyan-glow: rgba(63, 209, 231, 0.6);
+  --tk-cyan-40: rgba(63, 209, 231, 0.4);
+  --tk-cyan-20: rgba(63, 209, 231, 0.2);
+  --tk-cyan-15: rgba(63, 209, 231, 0.15);
+  --tk-cyan-10: rgba(63, 209, 231, 0.1);
+  --tk-pink: #f50a64;
+  --tk-dark-overlay: #020108;
+  --tk-card-border: rgba(63, 209, 231, 0);
+  --tk-msg-bg: #0a0a14;
 }
 
 /* All custom classes must be in @layer to survive Tailwind CSS 4 purging */
@@ -162,43 +175,99 @@
     z-index: 9999;
   }
 
-  /* Grid cell states */
+  /* Grid cell states — Tekken8 parallelogram */
   .grid-cell {
-    aspect-ratio: 3/4;
-    border: 1px solid var(--rs-gray-dark);
     position: relative;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transform: skewX(-28deg);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
     overflow: visible;
-    perspective: 1000px;
+    border: 1px solid var(--tk-card-border);
   }
 
-  .grid-cell.dark {
-    background: var(--rs-charcoal);
-    opacity: 0.4;
+  .grid-cell::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--tk-dark-overlay);
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+    pointer-events: none;
   }
 
-  .grid-cell.dark.breathing {
-    animation: breathe 4s ease-in-out infinite;
+  .grid-cell:hover {
+    border: 1px solid var(--tk-cyan);
+    box-shadow: 0px 0px 15px 0px var(--tk-cyan-glow);
   }
 
-  .grid-cell.active {
-    background: var(--rs-charcoal);
-    border-color: var(--rs-gray);
+  .grid-cell:hover::before {
+    opacity: 0;
+  }
+
+  .grid-cell img {
+    display: block;
+    width: 200%;
+    max-width: none !important;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) skewX(28deg);
+    transition: 0.4s;
+  }
+
+  .grid-cell .name-label {
+    display: block;
+    background: var(--tk-pink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    font-style: italic;
+    letter-spacing: 0;
+    position: absolute;
+    bottom: -12px;
+    right: -6px;
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .grid-cell .name-label span {
+    display: inline-block;
+    padding: 8px 16px;
+    transform: skewX(28deg);
+    white-space: nowrap;
+  }
+
+  .grid-cell:hover .name-label {
     opacity: 1;
   }
 
-  .grid-cell.active:hover {
-    border-color: var(--rs-white);
+  .grid-cell.focus {
+    border-color: var(--tk-cyan);
+    box-shadow: 0 0 25px var(--tk-cyan-glow);
   }
 
-  .grid-cell.focus {
-    border-color: var(--rs-white);
-    box-shadow: 0 0 20px rgba(240, 237, 230, 0.15);
+  .grid-cell.focus::before {
+    opacity: 0.2;
   }
 
   .grid-cell.group-highlight {
-    border-color: var(--rs-white);
+    border-color: var(--tk-cyan);
+    opacity: 1;
+  }
+
+  .grid-cell.dark {
+    opacity: 0.4;
+  }
+
+  .grid-cell.active {
     opacity: 1;
   }
 
@@ -235,8 +304,9 @@
   .detail-card {
     position: fixed;
     width: 280px;
-    background: var(--rs-black);
-    border: 1px solid var(--rs-white);
+    background: var(--tk-bg);
+    border: 1px solid var(--tk-cyan);
+    box-shadow: 0 0 20px var(--tk-cyan-glow);
     padding: 16px;
     z-index: 1000;
     opacity: 0;
@@ -271,7 +341,7 @@
     font-family: var(--rs-font-mono);
     font-size: 11px;
     letter-spacing: 2px;
-    color: var(--rs-gray);
+    color: var(--tk-cyan);
     text-transform: uppercase;
   }
 
@@ -351,6 +421,100 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: var(--rs-gray);
   }
+
+  /* Group marquee container */
+  .group-marquee {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  .group-marquee .marquee-track {
+    display: flex;
+    gap: 10px;
+    animation: marqueeScroll var(--marquee-duration, 30s) linear infinite;
+    width: max-content;
+  }
+
+  .group-marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  /* Marquee card */
+  .marquee-card {
+    position: relative;
+    width: 120px;
+    height: 160px;
+    flex-shrink: 0;
+    transform: skewX(-28deg);
+    overflow: hidden;
+    border: 1px solid rgba(63, 209, 231, 0);
+    transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;
+    cursor: pointer;
+  }
+
+  .marquee-card::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--tk-dark-overlay);
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .marquee-card img {
+    display: block;
+    width: 250px;
+    max-width: none !important;
+    height: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) skewX(28deg);
+  }
+
+  .marquee-card:hover {
+    border: 1px solid var(--tk-cyan);
+    box-shadow: 0 0 15px var(--tk-cyan-glow);
+  }
+
+  .marquee-card .name-label {
+    display: block;
+    background: var(--tk-pink);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    font-style: italic;
+    position: absolute;
+    bottom: -8px;
+    right: -4px;
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .marquee-card .name-label span {
+    display: inline-block;
+    padding: 6px 12px;
+    transform: skewX(28deg);
+    white-space: nowrap;
+  }
+
+  .marquee-card:hover .name-label {
+    opacity: 1;
+  }
+
+  .marquee-card.focus {
+    border-color: var(--tk-cyan);
+    box-shadow: 0 0 20px var(--tk-cyan-glow);
+  }
 }
 
 /* Animations must be outside @layer for keyframes to work */
@@ -368,4 +532,15 @@
 @keyframes shuffleIn {
   0% { transform: var(--shuffle-from); }
   100% { transform: translate(0, 0); }
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes tekkenReveal {
+  0% { opacity: 0; transform: skewX(-28deg) scale(0.8); }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; transform: skewX(-28deg) scale(1); }
 }

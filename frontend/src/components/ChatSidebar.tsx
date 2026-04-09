@@ -21,7 +21,7 @@ function MessageItem({ msg }: MessageItemProps) {
     <div
       className="flex gap-3 px-3 py-3 transition-colors"
       style={{
-        borderBottom: '1px solid var(--rs-gray-dark)',
+        borderBottom: '1px solid var(--tk-cyan-10)',
         backgroundColor: 'transparent',
       }}
     >
@@ -29,7 +29,7 @@ function MessageItem({ msg }: MessageItemProps) {
       <div
         className="h-8 w-8 shrink-0 overflow-hidden"
         style={{
-          border: '1px solid var(--rs-gray-dark)',
+          border: '1px solid var(--tk-cyan-20)',
           borderRadius: '0px',
         }}
       >
@@ -48,7 +48,7 @@ function MessageItem({ msg }: MessageItemProps) {
             className="text-base font-bold truncate"
             style={{
               fontFamily: 'var(--rs-font-display)',
-              color: 'var(--rs-white)',
+              color: 'var(--tk-cyan)',
             }}
           >
             {agent.name}
@@ -60,8 +60,8 @@ function MessageItem({ msg }: MessageItemProps) {
               className="shrink-0 px-1.5 py-0.5"
               style={{
                 fontFamily: 'var(--rs-font-mono)',
-                border: '1px solid var(--rs-white)',
-                color: 'var(--rs-white)',
+                background: 'var(--tk-pink)',
+                color: '#fff',
                 fontSize: '0.6rem',
                 letterSpacing: '1px',
                 borderRadius: '0px',
@@ -76,8 +76,8 @@ function MessageItem({ msg }: MessageItemProps) {
             className="shrink-0 px-1.5 py-0.5 text-xs"
             style={{
               fontFamily: 'var(--rs-font-mono)',
-              backgroundColor: 'var(--rs-gray-dark)',
-              color: 'var(--rs-gray-light)',
+              backgroundColor: 'var(--tk-cyan-10)',
+              color: 'var(--tk-cyan)',
               fontSize: '0.65rem',
               letterSpacing: '1px',
               borderRadius: '0px',
@@ -109,7 +109,7 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
     <div
       className="flex gap-3 px-3 py-3"
       style={{
-        borderBottom: '1px solid var(--rs-gray-dark)',
+        borderBottom: '1px solid var(--tk-cyan-10)',
         backgroundColor: 'transparent',
       }}
     >
@@ -117,7 +117,7 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
       <div
         className="h-8 w-8 shrink-0 overflow-hidden"
         style={{
-          border: '1px solid var(--rs-gray-dark)',
+          border: '1px solid var(--tk-cyan-20)',
           borderRadius: '0px',
         }}
       >
@@ -135,7 +135,7 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
             className="text-base font-bold"
             style={{
               fontFamily: 'var(--rs-font-display)',
-              color: 'var(--rs-white)',
+              color: 'var(--tk-cyan)',
               opacity: 0.8,
             }}
           >
@@ -146,8 +146,8 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
               className="shrink-0 px-1.5 py-0.5"
               style={{
                 fontFamily: 'var(--rs-font-mono)',
-                border: '1px solid var(--rs-white)',
-                color: 'var(--rs-white)',
+                background: 'var(--tk-pink)',
+                color: '#fff',
                 fontSize: '0.6rem',
                 letterSpacing: '1px',
                 borderRadius: '0px',
@@ -160,8 +160,8 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
             className="shrink-0 px-1.5 py-0.5"
             style={{
               fontFamily: 'var(--rs-font-mono)',
-              backgroundColor: 'var(--rs-gray-dark)',
-              color: 'var(--rs-gray-light)',
+              backgroundColor: 'var(--tk-cyan-10)',
+              color: 'var(--tk-cyan)',
               fontSize: '0.65rem',
               letterSpacing: '1px',
               borderRadius: '0px',
@@ -196,7 +196,7 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
               key={i}
               className="h-1.5 w-1.5"
               style={{
-                backgroundColor: 'var(--rs-gray-light)',
+                backgroundColor: 'var(--tk-cyan)',
                 animation: `blink 1.2s step-end infinite`,
                 animationDelay: `${i * 0.4}s`,
                 borderRadius: '0px',
@@ -259,12 +259,12 @@ export function ChatSidebar() {
   return (
     <div
       className="flex h-full flex-col"
-      style={{ backgroundColor: 'var(--rs-black)' }}
+      style={{ backgroundColor: 'var(--tk-bg)' }}
     >
       {/* Group Tabs */}
       <div
         className="custom-scrollbar flex shrink-0 overflow-x-auto"
-        style={{ borderBottom: '1px solid var(--rs-gray-dark)' }}
+        style={{ borderBottom: '1px solid var(--tk-cyan-15)' }}
       >
         {groupIds.length === 0 ? (
           <div
@@ -295,15 +295,15 @@ export function ChatSidebar() {
                 fontSize: manyGroups ? '0.75rem' : '1rem',
                 letterSpacing: manyGroups ? '1px' : '2px',
                 minWidth: manyGroups ? undefined : undefined,
-                backgroundColor: 'var(--rs-black)',
-                color: isActive ? 'var(--rs-white)' : 'var(--rs-gray)',
+                backgroundColor: 'var(--tk-bg)',
+                color: isActive ? 'var(--tk-cyan)' : 'var(--rs-gray)',
                 border: '1px solid var(--rs-gray-dark)',
-                borderColor: isActive ? 'var(--rs-white)' : 'var(--rs-gray-dark)',
+                borderColor: isActive ? 'var(--tk-cyan)' : 'var(--rs-gray-dark)',
                 borderRadius: '0px',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.borderColor = 'var(--rs-gray-light)';
+                  e.currentTarget.style.borderColor = 'var(--tk-cyan-40)';
                 }
               }}
               onMouseLeave={(e) => {
@@ -318,7 +318,7 @@ export function ChatSidebar() {
                 <span
                   className="absolute top-0.5 right-0.5 h-2 w-2"
                   style={{
-                    backgroundColor: 'var(--rs-gray-light)',
+                    backgroundColor: 'var(--tk-cyan)',
                     animation: 'pulse 1.5s ease-in-out infinite',
                     borderRadius: '0px',
                   }}
@@ -330,8 +330,8 @@ export function ChatSidebar() {
                   className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center text-xs"
                   style={{
                     fontFamily: 'var(--rs-font-mono)',
-                    backgroundColor: 'var(--rs-white)',
-                    color: 'var(--rs-black)',
+                    backgroundColor: 'var(--tk-pink)',
+                    color: '#fff',
                     fontSize: '0.6rem',
                     borderRadius: '0px',
                     minWidth: '1.25rem',
@@ -366,7 +366,7 @@ export function ChatSidebar() {
                     key={i}
                     className="h-2 w-2"
                     style={{
-                      backgroundColor: 'var(--rs-gray-light)',
+                      backgroundColor: 'var(--tk-cyan)',
                       opacity: 0.4,
                       animation: `blink 1.5s step-end infinite`,
                       animationDelay: `${i * 0.5}s`,
@@ -389,8 +389,8 @@ export function ChatSidebar() {
                     style={{
                       fontFamily: 'var(--rs-font-mono)',
                       color: 'var(--rs-gray)',
-                      backgroundColor: 'var(--rs-charcoal)',
-                      borderBottom: '1px solid var(--rs-gray-dark)',
+                      backgroundColor: 'var(--tk-msg-bg)',
+                      borderBottom: '1px solid var(--tk-cyan-10)',
                     }}
                   >
                     <span style={{ opacity: 0.7 }}>{msg.agent?.name}</span>

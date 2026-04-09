@@ -111,7 +111,7 @@ export default function SimulationPage() {
     return (
       <div
         className="flex h-screen items-center justify-center"
-        style={{ background: 'var(--rs-black)' }}
+        style={{ background: 'var(--tk-bg)' }}
       >
         <span
           className="font-mono uppercase"
@@ -130,7 +130,7 @@ export default function SimulationPage() {
   return (
     <div
       className="flex h-screen flex-col"
-      style={{ background: 'var(--rs-black)' }}
+      style={{ background: 'var(--tk-bg)' }}
     >
       {/* Status bar */}
       <StatusBar currentPhase={currentPhase} agentCount={totalMembers} />
