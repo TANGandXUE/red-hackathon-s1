@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, X, Swords, Loader2 } from 'lucide-react';
+import { Plus, X, Swords } from 'lucide-react';
 import { useSimulationStore } from '@/stores/simulation-store';
 
 const MAX_IDEAS = 4;

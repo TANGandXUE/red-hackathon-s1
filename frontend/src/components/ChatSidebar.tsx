@@ -8,10 +8,6 @@ import { getAvatarUrl } from '@/lib/avatar';
 
 export const JUDGE_ROLE = '评委' as const;
 
-function isJudgeMessage(msg: SimulationMessage): boolean {
-  return msg.agent?.role === JUDGE_ROLE;
-}
-
 interface MessageItemProps {
   msg: SimulationMessage;
 }
@@ -20,7 +16,6 @@ function MessageItem({ msg }: MessageItemProps) {
   const agent = msg.agent;
   if (!agent || !msg.content) return null;
 
-  const isJudge = isJudgeMessage(msg);
   const isLeader = agent.isLeader;
 
   return (

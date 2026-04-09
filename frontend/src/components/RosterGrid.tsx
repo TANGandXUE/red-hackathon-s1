@@ -120,23 +120,19 @@ export function RosterGrid({
 
   /* ------ activation stagger (phase 0 reveal) ------ */
   const [activatedCount, setActivatedCount] = useState(0);
-  const activationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (cells.length === 0) return;
-    // reset
-    setActivatedCount(0);
-    // stagger activation
+    // stagger activation via interval callbacks
     let count = 0;
-    activationTimerRef.current = setInterval(() => {
+    const timer = setInterval(() => {
       count += 1;
       setActivatedCount(count);
-      if (count >= cells.length) {
-        if (activationTimerRef.current) clearInterval(activationTimerRef.current);
-      }
+      if (count >= cells.length) clearInterval(timer);
     }, ACTIVATION_DELAY_MS);
     return () => {
-      if (activationTimerRef.current) clearInterval(activationTimerRef.current);
+      clearInterval(timer);
+      setActivatedCount(0);
     };
   }, [cells.length]);
 
