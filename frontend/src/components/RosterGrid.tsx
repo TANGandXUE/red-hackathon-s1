@@ -19,6 +19,7 @@ interface RosterGridProps {
   currentPhase: number;
   activeGroupId: number | null;
   speakingAgentId: string | null;
+  agentNames?: Map<string, string>;
 }
 
 interface CellData {
@@ -76,6 +77,7 @@ export function RosterGrid({
   currentPhase,
   activeGroupId,
   speakingAgentId,
+  agentNames,
 }: RosterGridProps) {
   /* ------ derived cell data ------ */
   const cells = useMemo<CellData[]>(() => {
@@ -84,20 +86,21 @@ export function RosterGrid({
     groups.forEach((g, gi) => {
       const track: 'SW' | 'HW' = gi % 2 === 0 ? 'SW' : 'HW';
       g.members.forEach((m) => {
+        const displayName = agentNames?.get(m.characterId) ?? m.characterId;
         all.push({
           characterId: m.characterId,
-          name: m.characterId, // fallback; overridden below if possible
+          name: displayName,
           role: m.role,
           groupId: g.groupId,
           groupName: `组${g.groupId}`,
           isLeader: m.isLeader,
           track,
-          initial: getInitial(m.characterId),
+          initial: getInitial(displayName),
         });
       });
     });
     return all;
-  }, [groups]);
+  }, [groups, agentNames]);
 
   /* ------ ordering: random in phase 0, grouped from phase 1 ------ */
   const randomOrder = useMemo(

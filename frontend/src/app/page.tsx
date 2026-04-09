@@ -92,7 +92,7 @@ export default function Home() {
           color: 'var(--rs-gray)',
         }}
       >
-        在像素酒馆中，让 AI 角色为你的想法而战
+        AI-DRIVEN HACKATHON SIMULATION PLATFORM
       </p>
 
       {/* Divider */}
