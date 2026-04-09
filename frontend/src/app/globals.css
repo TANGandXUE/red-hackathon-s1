@@ -175,17 +175,33 @@
     z-index: 9999;
   }
 
-  /* Grid cell states — Tekken8 parallelogram */
+  /*
+   * Grid cell — copied from Tekken8 .charaList li
+   * Reference: character.css #character .charaList li
+   */
   .grid-cell {
+    display: block;
+    margin: 20px 5px 0;
+    width: 140px !important;
+    height: 180px !important;
     position: relative;
-    cursor: pointer;
     transform: skewX(-28deg);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
-    overflow: visible;
-    border: 1px solid var(--tk-card-border);
   }
 
-  .grid-cell::before {
+  /* Inner container — copied from .charaList li a */
+  .grid-cell-inner {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    transition: 0.4s;
+    border: 1px solid rgba(63, 209, 231, 0);
+    cursor: pointer;
+  }
+
+  /* Dark overlay — copied from .charaList li a::before */
+  .grid-cell-inner::before {
     content: '';
     display: block;
     width: 100%;
@@ -196,17 +212,30 @@
     left: 0;
     z-index: 2;
     opacity: 0.6;
-    transition: opacity 0.3s;
-    pointer-events: none;
+    transition: 0.3s;
   }
 
-  .grid-cell:hover {
+  /* Hover — copied from .charaList li a:hover */
+  .grid-cell-inner:hover {
     border: 1px solid var(--tk-cyan);
     box-shadow: 0px 0px 15px 0px var(--tk-cyan-glow);
   }
 
-  .grid-cell:hover::before {
+  .grid-cell-inner:hover::before {
     opacity: 0;
+  }
+
+  /* Image — copied from .charaList li img */
+  .grid-cell img {
+    display: block;
+    width: 292px;
+    max-width: inherit !important;
+    height: auto;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, 0) skewX(28deg);
+    transition: 0.4s;
   }
 
   /* Hover info overlay — dark bg with text inside the card */
@@ -226,28 +255,11 @@
     overflow: hidden;
   }
 
-  .grid-cell.hovered .hover-info-overlay,
-  .marquee-card.hovered .hover-info-overlay {
+  .grid-cell-inner:hover .hover-info-overlay {
     opacity: 1;
   }
 
-  .grid-cell.hovered::before,
-  .marquee-card.hovered::before {
-    opacity: 0 !important;
-  }
-
-  .grid-cell img {
-    display: block;
-    width: 200%;
-    max-width: none !important;
-    height: auto;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) skewX(28deg);
-    transition: 0.4s;
-  }
-
+  /* Name label — copied from .charaSlider .sliderItem .name */
   .grid-cell .name-label {
     display: block;
     background: var(--tk-pink);
@@ -260,9 +272,8 @@
     bottom: -12px;
     right: -6px;
     z-index: 3;
-    opacity: 0;
+    opacity: 1;
     pointer-events: none;
-    transition: opacity 0.3s;
   }
 
   .grid-cell .name-label span {
@@ -272,22 +283,14 @@
     white-space: nowrap;
   }
 
-  .grid-cell:hover .name-label {
-    opacity: 1;
-  }
-
-  .grid-cell.focus {
+  /* States */
+  .grid-cell.focus .grid-cell-inner {
     border-color: var(--tk-cyan);
     box-shadow: 0 0 25px var(--tk-cyan-glow);
   }
 
-  .grid-cell.focus::before {
+  .grid-cell.focus .grid-cell-inner::before {
     opacity: 0.2;
-  }
-
-  .grid-cell.group-highlight {
-    border-color: var(--tk-cyan);
-    opacity: 1;
   }
 
   .grid-cell.dark {
@@ -467,20 +470,29 @@
     animation-play-state: paused;
   }
 
-  /* Marquee card */
+  /* Marquee card — same structure as grid-cell but smaller */
   .marquee-card {
-    position: relative;
-    width: 120px;
-    height: 160px;
+    display: block;
+    margin: 0 5px;
+    width: 120px !important;
+    height: 160px !important;
     flex-shrink: 0;
+    position: relative;
     transform: skewX(-28deg);
+  }
+
+  .marquee-card-inner {
+    display: block;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+    position: relative;
+    transition: 0.4s;
     border: 1px solid rgba(63, 209, 231, 0);
-    transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;
     cursor: pointer;
   }
 
-  .marquee-card::before {
+  .marquee-card-inner::before {
     content: '';
     display: block;
     width: 100%;
@@ -491,24 +503,28 @@
     left: 0;
     z-index: 2;
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: 0.3s;
     pointer-events: none;
   }
 
   .marquee-card img {
     display: block;
     width: 250px;
-    max-width: none !important;
+    max-width: inherit !important;
     height: auto;
     position: absolute;
-    top: 50%;
+    top: 0;
     left: 50%;
-    transform: translate(-50%, -50%) skewX(28deg);
+    transform: translate(-50%, 0) skewX(28deg);
   }
 
-  .marquee-card:hover {
+  .marquee-card-inner:hover {
     border: 1px solid var(--tk-cyan);
     box-shadow: 0 0 15px var(--tk-cyan-glow);
+  }
+
+  .marquee-card-inner:hover .hover-info-overlay {
+    opacity: 1;
   }
 
   .marquee-card .name-label {
@@ -519,26 +535,21 @@
     font-weight: 500;
     font-style: italic;
     position: absolute;
-    bottom: -8px;
-    right: -4px;
+    bottom: 0;
+    right: 0;
     z-index: 3;
-    opacity: 0;
+    opacity: 1;
     pointer-events: none;
-    transition: opacity 0.3s;
   }
 
   .marquee-card .name-label span {
     display: inline-block;
-    padding: 6px 12px;
+    padding: 4px 10px;
     transform: skewX(28deg);
     white-space: nowrap;
   }
 
-  .marquee-card:hover .name-label {
-    opacity: 1;
-  }
-
-  .marquee-card.focus {
+  .marquee-card.focus .marquee-card-inner {
     border-color: var(--tk-cyan);
     box-shadow: 0 0 20px var(--tk-cyan-glow);
   }

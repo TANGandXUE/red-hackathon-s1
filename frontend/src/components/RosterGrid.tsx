@@ -4,8 +4,8 @@ import {
   useState,
   useEffect,
   useRef,
-  useCallback,
   useMemo,
+  useCallback,
 } from 'react';
 import type { GroupInfo, Track } from '@/types/simulation';
 import { getAvatarUrl } from '@/lib/avatar';
@@ -253,19 +253,7 @@ export function RosterGrid({
     return () => clearTimeout(timer);
   }, [flipState]);
 
-  /* ------ hover state (card id) ------ */
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-
-  const handleMouseEnter = useCallback(
-    (cell: CellData) => {
-      setHoveredId(cell.characterId);
-    },
-    [],
-  );
-
-  const handleMouseLeave = useCallback(() => {
-    setHoveredId(null);
-  }, []);
+  /* Hover is fully CSS-driven via :hover on .grid-cell-inner / .marquee-card-inner */
 
   const setCellRef = useCallback(
     (id: string) => (el: HTMLDivElement | null) => {
@@ -292,18 +280,29 @@ export function RosterGrid({
   /* ------ Stage: revealing / revealed — flat parallelogram grid ------ */
   if (displayStage === 'revealing' || displayStage === 'revealed') {
     return (
-      <div className="custom-scrollbar flex h-full w-full flex-col overflow-y-auto p-4">
-        <div className="flex flex-wrap justify-center gap-3">
+      <div
+        className="custom-scrollbar h-full w-full overflow-y-auto overflow-x-hidden"
+        style={{ background: 'var(--tk-bg)' }}
+      >
+        {/* Container — copied from .charaList: flex wrap, centered, max-width */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '20px 40px',
+          }}
+        >
           {randomCells.map((cell, index) => {
             const isActivated = index < activatedCount;
             const isSpeaking = speakingAgentId === cell.characterId;
-            const isHovered = hoveredId === cell.characterId;
 
             const classNames = [
               'grid-cell',
               isActivated ? 'active' : 'dark',
               isSpeaking ? 'focus' : '',
-              isHovered ? 'hovered' : '',
             ]
               .filter(Boolean)
               .join(' ');
@@ -313,23 +312,21 @@ export function RosterGrid({
                 key={cell.characterId}
                 ref={setCellRef(cell.characterId)}
                 className={classNames}
-                style={{
-                  width: 140,
-                  height: 180,
-                  animation: isActivated
-                    ? `tekkenReveal 1.2s ease ${index * ACTIVATION_DELAY_MS}ms both`
-                    : undefined,
-                }}
-                onMouseEnter={() => handleMouseEnter(cell)}
-                onMouseLeave={handleMouseLeave}
+                style={
+                  isActivated
+                    ? { animation: `tekkenReveal 1.2s ease ${index * ACTIVATION_DELAY_MS}ms both` }
+                    : undefined
+                }
               >
-                <img src={cell.avatarUrl} alt={cell.name} loading="lazy" />
+                <div
+                  className="grid-cell-inner"
+                >
+                  <img src={cell.avatarUrl} alt={cell.name} loading="lazy" />
+                  <HoverOverlay cell={cell} speakingAgentId={speakingAgentId} />
+                </div>
                 <div className="name-label">
                   <span>{cell.name}</span>
                 </div>
-                {isHovered && (
-                  <HoverOverlay cell={cell} speakingAgentId={speakingAgentId} />
-                )}
               </div>
             );
           })}
@@ -341,11 +338,87 @@ export function RosterGrid({
   /* ------ Stage: grouping — intermediate grouped grid (FLIP target) ------ */
   if (displayStage === 'grouping') {
     return (
-      <div className="custom-scrollbar flex h-full w-full flex-col gap-4 overflow-y-auto p-4">
+      <div
+        className="custom-scrollbar h-full w-full overflow-y-auto overflow-x-hidden"
+        style={{ background: 'var(--tk-bg)' }}
+      >
+        <div style={{ padding: '20px 40px' }}>
+          {Array.from(groupedMap.entries()).map(([groupId, members]) => {
+            const isActive = activeGroupId === groupId;
+            return (
+              <div key={groupId} style={{ marginBottom: 24 }}>
+                <div
+                  className="font-mono mb-2 uppercase"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    color: isActive ? 'var(--tk-cyan)' : 'var(--rs-gray)',
+                  }}
+                >
+                  组 {groupId}
+                  <span style={{ marginLeft: 12, fontSize: 9, color: 'var(--rs-gray-light)', letterSpacing: 1 }}>
+                    {TRACK_LABELS[members[0]?.track ?? 'software']}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                  {members.map((cell) => {
+                    const isSpeaking = speakingAgentId === cell.characterId;
+                    const classNames = [
+                      'grid-cell',
+                      'active',
+                      isSpeaking ? 'focus' : '',
+                    ].filter(Boolean).join(' ');
+
+                    return (
+                      <div
+                        key={cell.characterId}
+                        ref={setCellRef(cell.characterId)}
+                        className={classNames}
+                        style={{ width: 120, height: 160, margin: '10px 5px 0' }}
+                      >
+                        <div className="grid-cell-inner">
+                          <img src={cell.avatarUrl} alt={cell.name} loading="lazy" />
+                          <HoverOverlay cell={cell} speakingAgentId={speakingAgentId} />
+                        </div>
+                        <div className="name-label">
+                          <span>{cell.name}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  /* ------ Stage: marquee — final horizontal scrolling per group ------ */
+  return (
+    <div
+      className="custom-scrollbar h-full w-full overflow-y-auto overflow-x-hidden"
+      style={{ background: 'var(--tk-bg)' }}
+    >
+      <div style={{ padding: '20px 40px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {Array.from(groupedMap.entries()).map(([groupId, members]) => {
           const isActive = activeGroupId === groupId;
+          const marqueeDuration = `${members.length * 8}s`;
+          const duplicated = [...members, ...members];
+
           return (
-            <div key={groupId} style={{ padding: '12px 16px' }}>
+            <div
+              key={groupId}
+              style={{
+                border: isActive
+                  ? '1px solid var(--tk-cyan)'
+                  : '1px solid var(--rs-gray-dark)',
+                boxShadow: isActive ? '0 0 15px var(--tk-cyan-glow)' : 'none',
+                padding: '12px 16px',
+                transition: 'border-color 0.3s, box-shadow 0.3s',
+              }}
+            >
               <div
                 className="font-mono mb-2 uppercase"
                 style={{
@@ -359,132 +432,43 @@ export function RosterGrid({
                   {TRACK_LABELS[members[0]?.track ?? 'software']}
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {members.map((cell) => {
-                  const isSpeaking = speakingAgentId === cell.characterId;
-                  const isHovered = hoveredId === cell.characterId;
-                  const classNames = [
-                    'grid-cell',
-                    'active',
-                    isSpeaking ? 'focus' : '',
-                    isHovered ? 'hovered' : '',
-                  ].filter(Boolean).join(' ');
 
-                  return (
-                    <div
-                      key={cell.characterId}
-                      ref={setCellRef(cell.characterId)}
-                      className={classNames}
-                      style={{ width: 120, height: 160 }}
-                      onMouseEnter={() => handleMouseEnter(cell)}
-                      onMouseLeave={handleMouseLeave}
-                    >
-                      <img src={cell.avatarUrl} alt={cell.name} loading="lazy" />
-                      <div className="name-label">
-                        <span>{cell.name}</span>
+              <div className="group-marquee" style={{ height: 176 }}>
+                <div
+                  className="marquee-track"
+                  style={{ '--marquee-duration': marqueeDuration } as React.CSSProperties}
+                >
+                  {duplicated.map((cell, i) => {
+                    const isSpeaking = speakingAgentId === cell.characterId;
+                    const cardClass = [
+                      'marquee-card',
+                      isSpeaking ? 'focus' : '',
+                    ].filter(Boolean).join(' ');
+
+                    return (
+                      <div
+                        key={`${cell.characterId}-${i}`}
+                        ref={i < members.length ? setCellRef(cell.characterId) : undefined}
+                        className={cardClass}
+                      >
+                        <div
+                          className="marquee-card-inner"
+                        >
+                          <img src={cell.avatarUrl} alt={cell.name} loading="lazy" />
+                          <HoverOverlay cell={cell} speakingAgentId={speakingAgentId} />
+                        </div>
+                        <div className="name-label">
+                          <span>{cell.name}</span>
+                        </div>
                       </div>
-                      {isHovered && (
-                        <HoverOverlay cell={cell} speakingAgentId={speakingAgentId} />
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
-    );
-  }
-
-  /* ------ Stage: marquee — final horizontal scrolling per group ------ */
-  return (
-    <div className="custom-scrollbar flex h-full w-full flex-col gap-4 overflow-y-auto p-4">
-      {Array.from(groupedMap.entries()).map(([groupId, members]) => {
-        const isActive = activeGroupId === groupId;
-        const marqueeDuration = `${members.length * 8}s`;
-        const duplicated = [...members, ...members];
-
-        return (
-          <div
-            key={groupId}
-            style={{
-              border: isActive
-                ? '1px solid var(--tk-cyan)'
-                : '1px solid var(--rs-gray-dark)',
-              boxShadow: isActive ? '0 0 15px var(--tk-cyan-glow)' : 'none',
-              padding: '12px 16px',
-              transition: 'border-color 0.3s, box-shadow 0.3s',
-            }}
-          >
-            {/* Group label */}
-            <div
-              className="font-mono mb-2 uppercase"
-              style={{
-                fontSize: 11,
-                letterSpacing: 2,
-                color: isActive ? 'var(--tk-cyan)' : 'var(--rs-gray)',
-              }}
-            >
-              组 {groupId}
-              <span
-                style={{
-                  marginLeft: 12,
-                  fontSize: 9,
-                  color: 'var(--rs-gray-light)',
-                  letterSpacing: 1,
-                }}
-              >
-                {TRACK_LABELS[members[0]?.track ?? 'software']}
-              </span>
-            </div>
-
-            {/* Marquee container */}
-            <div className="group-marquee" style={{ height: 176 }}>
-              <div
-                className="marquee-track"
-                style={
-                  { '--marquee-duration': marqueeDuration } as React.CSSProperties
-                }
-              >
-                {duplicated.map((cell, i) => {
-                  const isSpeaking = speakingAgentId === cell.characterId;
-                  const isHovered = hoveredId === cell.characterId;
-                  const cardClass = [
-                    'marquee-card',
-                    isSpeaking ? 'focus' : '',
-                    isHovered ? 'hovered' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ');
-
-                  return (
-                    <div
-                      key={`${cell.characterId}-${i}`}
-                      ref={
-                        i < members.length
-                          ? setCellRef(cell.characterId)
-                          : undefined
-                      }
-                      className={cardClass}
-                      onMouseEnter={() => handleMouseEnter(cell)}
-                      onMouseLeave={handleMouseLeave}
-                    >
-                      <img src={cell.avatarUrl} alt={cell.name} loading="lazy" />
-                      <div className="name-label">
-                        <span>{cell.name}</span>
-                      </div>
-                      {isHovered && (
-                        <HoverOverlay cell={cell} speakingAgentId={speakingAgentId} />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
