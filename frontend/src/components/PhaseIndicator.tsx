@@ -1,10 +1,10 @@
 'use client';
 
 const PHASES = [
-  { id: 0, short: '分组', full: '阶段 0 — 分组中...' },
-  { id: 1, short: '讨论', full: '阶段 1 — 自由讨论' },
-  { id: 2, short: '创造', full: '阶段 2 — 创造产品' },
-  { id: 3, short: '答辩', full: '阶段 3 — 评审答辩' },
+  { id: 0, short: '分组', full: '分组中' },
+  { id: 1, short: '讨论', full: '自由讨论' },
+  { id: 2, short: '创造', full: '创造产品' },
+  { id: 3, short: '答辩', full: '评审答辩' },
 ];
 
 interface PhaseIndicatorProps {
@@ -12,105 +12,88 @@ interface PhaseIndicatorProps {
 }
 
 export function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
-  const label = PHASES.find((p) => p.id === currentPhase)?.full ?? `阶段 ${currentPhase}`;
+  const phase = PHASES.find((p) => p.id === currentPhase);
+  const label = phase?.short ?? `阶段 ${currentPhase}`;
+  const description = phase?.full ?? '';
 
   return (
     <div
-      className="relative w-full overflow-hidden border-b-2"
+      className="w-full"
       style={{
-        backgroundColor: '#0F0F23',
-        borderColor: '#7C3AED',
-        boxShadow: '0 2px 12px rgba(124, 58, 237, 0.3)',
+        backgroundColor: 'var(--rs-black)',
+        borderBottom: '1px solid var(--rs-gray-dark)',
       }}
     >
-      <div className="relative flex items-center gap-4 px-6 py-3">
-        {/* Pulsing dot */}
-        <span className="relative flex h-3 w-3 shrink-0">
+      <div className="flex items-center gap-4 px-6 py-3">
+        {/* Pulsing status dot */}
+        <span className="relative flex h-2 w-2 shrink-0">
           <span
-            className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-            style={{ backgroundColor: '#7C3AED' }}
+            className="absolute inline-flex h-full w-full"
+            style={{
+              backgroundColor: 'var(--rs-white)',
+              animation: 'pulse 2s ease-in-out infinite',
+              opacity: 0.5,
+              borderRadius: '0px',
+            }}
           />
           <span
-            className="relative inline-flex h-3 w-3 rounded-full"
-            style={{ backgroundColor: '#A78BFA' }}
+            className="relative inline-flex h-2 w-2"
+            style={{
+              backgroundColor: 'var(--rs-white)',
+              borderRadius: '0px',
+            }}
           />
         </span>
 
         {/* Phase label */}
         <span
-          className="text-lg tracking-wide whitespace-nowrap"
+          className="whitespace-nowrap"
           style={{
-            fontFamily: 'var(--font-pixel-body)',
-            color: '#E2E8F0',
+            fontFamily: 'var(--rs-font-display)',
+            fontWeight: 700,
+            letterSpacing: '3px',
+            textTransform: 'uppercase',
+            color: 'var(--rs-white)',
+            fontSize: '0.875rem',
           }}
         >
           {label}
         </span>
 
-        {/* Step progress — right side */}
-        <div className="ml-auto flex items-center gap-1">
-          {PHASES.map((phase, idx) => {
-            const isDone = phase.id < currentPhase;
-            const isCurrent = phase.id === currentPhase;
+        {/* Phase description */}
+        {description && (
+          <span
+            style={{
+              fontFamily: 'var(--rs-font-mono)',
+              color: 'var(--rs-gray)',
+              fontSize: '0.75rem',
+              letterSpacing: '1px',
+            }}
+          >
+            {description}
+          </span>
+        )}
+
+        {/* Step indicators — right side */}
+        <div className="ml-auto flex items-center gap-2">
+          {PHASES.map((p) => {
+            const isDone = p.id < currentPhase;
+            const isCurrent = p.id === currentPhase;
             return (
-              <div key={phase.id} className="flex items-center">
-                {/* Step pill */}
-                <div
-                  className="flex items-center gap-1 px-2 py-1"
-                  style={{
-                    backgroundColor: isCurrent
-                      ? 'rgba(124, 58, 237, 0.3)'
-                      : isDone
-                      ? 'rgba(167, 139, 250, 0.15)'
-                      : 'transparent',
-                    border: isCurrent
-                      ? '1px solid #7C3AED'
-                      : '1px solid transparent',
-                  }}
-                >
-                  {/* Number circle */}
-                  <span
-                    className="flex h-4 w-4 items-center justify-center text-xs"
-                    style={{
-                      fontFamily: 'var(--font-pixel-body)',
-                      fontSize: '0.6rem',
-                      backgroundColor: isDone
-                        ? '#A78BFA'
-                        : isCurrent
-                        ? '#7C3AED'
-                        : '#2D2D4A',
-                      color: isDone || isCurrent ? '#FFFFFF' : '#64748B',
-                    }}
-                  >
-                    {isDone ? '✓' : phase.id}
-                  </span>
-                  {/* Label */}
-                  <span
-                    className="text-xs hidden sm:inline"
-                    style={{
-                      fontFamily: 'var(--font-pixel-body)',
-                      fontSize: '0.6rem',
-                      color: isCurrent
-                        ? '#E2E8F0'
-                        : isDone
-                        ? '#A78BFA'
-                        : '#4A4A6A',
-                    }}
-                  >
-                    {phase.short}
-                  </span>
-                </div>
-                {/* Connector line */}
-                {idx < PHASES.length - 1 && (
-                  <div
-                    className="h-px w-3 hidden sm:block"
-                    style={{
-                      backgroundColor:
-                        phase.id < currentPhase ? '#A78BFA' : '#2D2D4A',
-                    }}
-                  />
-                )}
-              </div>
+              <div
+                key={p.id}
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: isDone
+                    ? 'var(--rs-white)'
+                    : 'var(--rs-gray-dark)',
+                  border: isCurrent
+                    ? '1px solid var(--rs-white)'
+                    : '1px solid transparent',
+                  borderRadius: '0px',
+                }}
+              />
             );
           })}
         </div>
