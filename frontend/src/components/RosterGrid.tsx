@@ -50,7 +50,6 @@ type DisplayStage = 'revealing' | 'revealed' | 'grouping' | 'marquee';
 const STAGGER_MS = 60;         // delay between each card's CSS animation
 const ANIMATION_MS = 800;      // tekkenReveal animation duration
 const PAUSE_AFTER_REVEAL_MS = 1200;
-const FLIP_DURATION_MS = 1200;
 
 const TRACK_LABELS: Record<Track, string> = {
   software: '软件赛道',
@@ -150,7 +149,6 @@ export function RosterGrid({
   /* ------ Display stage state machine (pure CSS stagger, no state-driven re-renders) ------ */
   const [displayStage, setDisplayStage] = useState<DisplayStage>('revealing');
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
-  const prevPositions = useRef(new Map<string, DOMRect>());
 
   // Total time for all cards to finish their staggered entrance
   const totalRevealMs = cells.length * STAGGER_MS + ANIMATION_MS;
@@ -164,58 +162,47 @@ export function RosterGrid({
     return () => clearTimeout(timer);
   }, [cells.length, displayStage, totalRevealMs]);
 
-  // Stage 2→3: In 'revealed', capture FLIP positions, pause, then switch to 'grouping'
+  // Stage 2→3: Fade out flat grid, then switch to grouping
   useEffect(() => {
     if (displayStage !== 'revealed') return;
-    // Capture current flat-grid positions for FLIP
-    const positions = new Map<string, DOMRect>();
-    cellRefs.current.forEach((el, id) => {
-      positions.set(id, el.getBoundingClientRect());
-    });
-    prevPositions.current = positions;
-
     const timer = setTimeout(() => {
       setDisplayStage('grouping');
     }, PAUSE_AFTER_REVEAL_MS);
     return () => clearTimeout(timer);
   }, [displayStage]);
 
-  // Stage 3: When 'grouping' renders, run FLIP animation
-  const flipRan = useRef(false);
+  // Stage 3→4: In grouping, cards appear one by one per group with stagger,
+  // then each group glows when full. After all done, switch to marquee.
+  const [groupingProgress, setGroupingProgress] = useState(0);
+  const [glowingGroups, setGlowingGroups] = useState<Set<number>>(new Set());
+  const groupEntries = useMemo(() => Array.from(groupedMap.entries()), [groupedMap]);
+  const totalGroupingCards = cells.length;
+  const GROUPING_CARD_DELAY = 80; // ms between each card appearing
+
   useEffect(() => {
-    if (displayStage !== 'grouping' || flipRan.current) return;
-    flipRan.current = true;
+    if (displayStage !== 'grouping') return;
+    let count = 0;
+    const timer = setInterval(() => {
+      count += 1;
+      setGroupingProgress(count);
 
-    // After one rAF the grouped DOM has painted — measure new positions
-    requestAnimationFrame(() => {
-      const prev = prevPositions.current;
-      cellRefs.current.forEach((el, id) => {
-        const oldRect = prev.get(id);
-        if (!oldRect) return;
-        const newRect = el.getBoundingClientRect();
-        const dx = oldRect.left - newRect.left;
-        const dy = oldRect.top - newRect.top;
-        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      // Check if a group just got filled — trigger glow
+      let runningTotal = 0;
+      for (const [groupId, members] of groupEntries) {
+        runningTotal += members.length;
+        if (count === runningTotal) {
+          setGlowingGroups(prev => new Set(prev).add(groupId));
+        }
+      }
 
-        el.style.transition = 'none';
-        el.style.transform = `translate(${dx}px, ${dy}px) skewX(-28deg)`;
-        el.getBoundingClientRect(); // force reflow
-
-        el.style.transition = `transform ${FLIP_DURATION_MS}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-        el.style.transform = 'skewX(-28deg)';
-      });
-    });
-
-    const timer = setTimeout(() => {
-      cellRefs.current.forEach((el) => {
-        el.style.transition = '';
-        el.style.transform = '';
-      });
-      setDisplayStage('marquee');
-    }, FLIP_DURATION_MS + 200);
-
-    return () => clearTimeout(timer);
-  }, [displayStage]);
+      if (count >= totalGroupingCards) {
+        clearInterval(timer);
+        // Wait for last glow to finish, then switch to marquee
+        setTimeout(() => setDisplayStage('marquee'), 1600);
+      }
+    }, GROUPING_CARD_DELAY);
+    return () => clearInterval(timer);
+  }, [displayStage, totalGroupingCards, groupEntries]);
 
   /* ------ ref setter ------ */
   const setCellRef = useCallback(
@@ -239,6 +226,7 @@ export function RosterGrid({
 
   /* ------ Stage: revealing / revealed — flat parallelogram grid ------ */
   if (displayStage === 'revealing' || displayStage === 'revealed') {
+    const isFadingOut = displayStage === 'revealed';
     return (
       <div className="custom-scrollbar h-full w-full overflow-y-auto overflow-x-hidden" style={{ background: 'var(--tk-bg)' }}>
         <div
@@ -249,6 +237,8 @@ export function RosterGrid({
             maxWidth: 1200,
             margin: '0 auto',
             padding: '20px 40px',
+            opacity: isFadingOut ? 0 : 1,
+            transition: `opacity ${PAUSE_AFTER_REVEAL_MS * 0.8}ms ease`,
           }}
         >
           {randomCells.map((cell, index) => {
@@ -277,40 +267,53 @@ export function RosterGrid({
     );
   }
 
-  /* ------ Stage: grouping — grouped grid with FLIP animation ------ */
+  /* ------ Stage: grouping — cards appear one by one per group ------ */
   if (displayStage === 'grouping') {
+    let globalCardIndex = 0;
     return (
       <div className="custom-scrollbar h-full w-full overflow-y-auto overflow-x-hidden" style={{ background: 'var(--tk-bg)' }}>
-        <div style={{ padding: '20px 40px' }}>
-          {Array.from(groupedMap.entries()).map(([groupId, members]) => {
-            const isActive = activeGroupId === groupId;
+        <div style={{ padding: '20px 40px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {groupEntries.map(([groupId, members]) => {
+            const isGlowing = glowingGroups.has(groupId);
             return (
-              <div key={groupId} style={{ marginBottom: 24 }}>
-                <div className="font-mono mb-2 uppercase" style={{ fontSize: 11, letterSpacing: 2, color: isActive ? 'var(--tk-cyan)' : 'var(--rs-gray)' }}>
+              <div
+                key={groupId}
+                className={isGlowing ? 'group-container glow' : 'group-container'}
+                style={{
+                  border: '1px solid var(--rs-gray-dark)',
+                  padding: '12px 16px',
+                  transition: 'border-color 0.3s, box-shadow 0.3s',
+                }}
+              >
+                <div className="font-mono mb-2 uppercase" style={{ fontSize: 11, letterSpacing: 2, color: 'var(--rs-gray)' }}>
                   组 {groupId}
                   <span style={{ marginLeft: 12, fontSize: 9, color: 'var(--rs-gray-light)', letterSpacing: 1 }}>
                     {TRACK_LABELS[members[0]?.track ?? 'software']}
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                  {members.map((cell) => {
-                    const isSpeaking = speakingAgentId === cell.characterId;
-                    const classNames = ['grid-cell', 'active', isSpeaking ? 'focus' : ''].filter(Boolean).join(' ');
-                    return (
-                      <div
-                        key={cell.characterId}
-                        ref={setCellRef(cell.characterId)}
-                        className={classNames}
-                        style={{ width: 120, height: 160, margin: '10px 5px 0' }}
-                      >
-                        <div className="grid-cell-inner">
-                          <img src={cell.avatarUrl} alt={cell.name} loading="lazy" />
-                          <HoverOverlay cell={cell} speakingAgentId={speakingAgentId} />
+                <div className="group-marquee" style={{ height: 340 }}>
+                  <div style={{ display: 'flex', gap: 10, padding: '10px 0' }}>
+                    {members.map((cell) => {
+                      const cardIdx = globalCardIndex++;
+                      const isVisible = cardIdx < groupingProgress;
+                      return (
+                        <div
+                          key={cell.characterId}
+                          className="marquee-card"
+                          style={{
+                            opacity: isVisible ? 1 : 0,
+                            transition: 'opacity 0.4s ease',
+                          }}
+                        >
+                          <div className="marquee-card-inner">
+                            <img src={cell.avatarUrl} alt={cell.name} loading="lazy" />
+                            <HoverOverlay cell={cell} speakingAgentId={speakingAgentId} />
+                          </div>
+                          <div className="name-label"><span>{cell.name}</span></div>
                         </div>
-                        <div className="name-label"><span>{cell.name}</span></div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             );
@@ -346,7 +349,7 @@ export function RosterGrid({
                 </span>
               </div>
 
-              <div className="group-marquee" style={{ height: 176 }}>
+              <div className="group-marquee" style={{ height: 340 }}>
                 <div className="marquee-track" style={{ '--marquee-duration': marqueeDuration } as React.CSSProperties}>
                   {duplicated.map((cell, i) => {
                     const isSpeaking = speakingAgentId === cell.characterId;
