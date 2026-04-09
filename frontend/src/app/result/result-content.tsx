@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Trophy, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useSimulationStore } from '@/stores/simulation-store';
 import * as api from '@/services/api';
 import ResultCard from '@/components/ResultCard';
@@ -62,25 +62,19 @@ export default function ResultContent() {
   if (loading) {
     return (
       <div
-        className="crt-overlay pixel-grid-bg flex min-h-screen items-center justify-center"
-        style={{ backgroundColor: '#0F0F23' }}
+        className="flex min-h-screen items-center justify-center"
+        style={{ backgroundColor: 'var(--rs-black)' }}
       >
-        <div className="flex flex-col items-center gap-4">
-          <Loader2
-            size={32}
-            className="animate-spin"
-            style={{ color: '#A78BFA' }}
-          />
-          <p
-            className="text-lg"
-            style={{
-              fontFamily: 'var(--font-pixel-body)',
-              color: '#E2E8F0',
-            }}
-          >
-            加载结果中...
-          </p>
-        </div>
+        <p
+          style={{
+            fontFamily: 'var(--rs-font-mono)',
+            color: 'var(--rs-gray)',
+            letterSpacing: '3px',
+            animation: 'pulse 2s ease-in-out infinite',
+          }}
+        >
+          LOADING...
+        </p>
       </div>
     );
   }
@@ -89,14 +83,14 @@ export default function ResultContent() {
   if (error) {
     return (
       <div
-        className="crt-overlay pixel-grid-bg flex min-h-screen flex-col items-center justify-center gap-6"
-        style={{ backgroundColor: '#0F0F23' }}
+        className="flex min-h-screen flex-col items-center justify-center gap-6"
+        style={{ backgroundColor: 'var(--rs-black)' }}
       >
         <p
-          className="text-lg"
+          className="text-sm"
           style={{
-            fontFamily: 'var(--font-pixel-body)',
-            color: '#F43F5E',
+            fontFamily: 'var(--rs-font-mono)',
+            color: 'var(--rs-gray-light)',
           }}
         >
           {error}
@@ -104,12 +98,23 @@ export default function ResultContent() {
         <button
           type="button"
           onClick={handleBackHome}
-          className="pixel-border cursor-pointer px-6 py-3 transition-all duration-200"
+          className="cursor-pointer px-6 py-3 transition-all duration-200"
           style={{
-            fontFamily: 'var(--font-pixel-body)',
-            backgroundColor: '#1a1a35',
-            color: '#A78BFA',
-            borderColor: '#7C3AED',
+            fontFamily: 'var(--rs-font-display)',
+            backgroundColor: 'transparent',
+            color: 'var(--rs-white)',
+            border: '1px solid var(--rs-white)',
+            borderRadius: '0px',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--rs-white)';
+            e.currentTarget.style.color = 'var(--rs-black)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = 'var(--rs-white)';
           }}
         >
           返回首页
@@ -120,50 +125,52 @@ export default function ResultContent() {
 
   return (
     <div
-      className="crt-overlay pixel-grid-bg min-h-screen px-4 py-12"
-      style={{ backgroundColor: '#0F0F23' }}
+      className="min-h-screen px-4 py-12"
+      style={{ backgroundColor: 'var(--rs-black)' }}
     >
       <div className="mx-auto max-w-3xl">
         {/* Title */}
-        <div className="mb-2 flex items-center justify-center gap-3">
-          <Trophy size={28} style={{ color: '#FFD700' }} />
-          <h1
-            className="neon-glow-purple text-center text-lg leading-relaxed sm:text-xl"
-            style={{
-              fontFamily: 'var(--font-pixel-display)',
-              color: '#A78BFA',
-            }}
-          >
-            HinH 黑客松
-          </h1>
-          <Trophy size={28} style={{ color: '#FFD700' }} />
-        </div>
-        <p
-          className="mb-8 text-center text-2xl"
+        <h1
+          className="mb-2 text-center"
           style={{
-            fontFamily: 'var(--font-pixel-body)',
-            color: '#E2E8F0',
+            fontFamily: 'var(--rs-font-display)',
+            fontWeight: 700,
+            fontSize: '32px',
+            letterSpacing: '6px',
+            color: 'var(--rs-white)',
+          }}
+        >
+          HinH
+        </h1>
+        <p
+          className="mb-8 text-center"
+          style={{
+            fontFamily: 'var(--rs-font-mono)',
+            fontSize: '12px',
+            letterSpacing: '3px',
+            textTransform: 'uppercase',
+            color: 'var(--rs-gray)',
           }}
         >
           最终排名
         </p>
 
-        {/* Decorative divider */}
+        {/* Divider */}
         <div
-          className="mx-auto mb-10 h-1 w-full max-w-md"
+          className="mx-auto mb-10 w-full max-w-md"
           style={{
-            background:
-              'linear-gradient(90deg, transparent, #7C3AED, #A78BFA, #7C3AED, transparent)',
+            height: '1px',
+            backgroundColor: 'var(--rs-gray-dark)',
           }}
         />
 
         {/* Results list */}
         {sortedResults.length === 0 ? (
           <p
-            className="text-center text-lg"
+            className="text-center text-sm"
             style={{
-              fontFamily: 'var(--font-pixel-body)',
-              color: '#64748b',
+              fontFamily: 'var(--rs-font-mono)',
+              color: 'var(--rs-gray)',
             }}
           >
             暂无结果数据
@@ -180,12 +187,12 @@ export default function ResultContent() {
           </div>
         )}
 
-        {/* Decorative divider */}
+        {/* Divider */}
         <div
-          className="mx-auto mt-10 mb-8 h-1 w-full max-w-md"
+          className="mx-auto mt-10 mb-8 w-full max-w-md"
           style={{
-            background:
-              'linear-gradient(90deg, transparent, #7C3AED, #A78BFA, #7C3AED, transparent)',
+            height: '1px',
+            backgroundColor: 'var(--rs-gray-dark)',
           }}
         />
 
@@ -194,32 +201,29 @@ export default function ResultContent() {
           <button
             type="button"
             onClick={handleBackHome}
-            className="pixel-border neon-box-glow flex cursor-pointer items-center gap-2 px-8 py-3 transition-all duration-200"
+            className="flex cursor-pointer items-center gap-2 px-8 py-3 transition-all duration-200"
             style={{
-              fontFamily: 'var(--font-pixel-display)',
+              fontFamily: 'var(--rs-font-display)',
               fontSize: '12px',
-              backgroundColor: '#1a1a35',
-              color: '#A78BFA',
-              borderColor: '#7C3AED',
+              backgroundColor: 'transparent',
+              color: 'var(--rs-white)',
+              border: '1px solid var(--rs-white)',
+              borderRadius: '0px',
+              letterSpacing: '3px',
+              textTransform: 'uppercase',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--rs-white)';
+              e.currentTarget.style.color = 'var(--rs-black)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--rs-white)';
             }}
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={14} />
             返回首页
           </button>
-        </div>
-
-        {/* Bottom decorative pixel row */}
-        <div className="mt-12 flex justify-center gap-2">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-2 w-2"
-              style={{
-                backgroundColor: i % 2 === 0 ? '#7C3AED' : '#A78BFA',
-                opacity: 0.6,
-              }}
-            />
-          ))}
         </div>
       </div>
     </div>

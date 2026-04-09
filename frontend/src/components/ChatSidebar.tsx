@@ -6,24 +6,6 @@ import type { SimulationMessage, TypingAgent } from '@/types/simulation';
 import MarkdownContent from './MarkdownContent';
 import { getAvatarUrl } from '@/lib/avatar';
 
-export const JUDGE_ROLE = '评委' as const;
-
-const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
-  产品经理: { bg: '#7C3AED', text: '#FFFFFF' },
-  前端工程师: { bg: '#3B82F6', text: '#FFFFFF' },
-  后端工程师: { bg: '#10B981', text: '#FFFFFF' },
-  设计师: { bg: '#F43F5E', text: '#FFFFFF' },
-  运营: { bg: '#F59E0B', text: '#1A1A2E' },
-  [JUDGE_ROLE]: { bg: '#D4A017', text: '#1A1A2E' },
-};
-
-function getRoleStyle(role: string) {
-  return ROLE_COLORS[role] ?? { bg: '#4B5563', text: '#FFFFFF' };
-}
-
-function isJudgeMessage(msg: SimulationMessage): boolean {
-  return msg.agent?.role === JUDGE_ROLE;
-}
 
 interface MessageItemProps {
   msg: SimulationMessage;
@@ -33,39 +15,28 @@ function MessageItem({ msg }: MessageItemProps) {
   const agent = msg.agent;
   if (!agent || !msg.content) return null;
 
-  const roleStyle = getRoleStyle(agent.role);
-  const isJudge = isJudgeMessage(msg);
   const isLeader = agent.isLeader;
 
   return (
     <div
-      className="flex gap-3 px-3 py-3 border-b transition-colors"
+      className="flex gap-3 px-3 py-3 transition-colors"
       style={{
-        borderColor: 'rgba(124, 58, 237, 0.15)',
-        backgroundColor: isJudge
-          ? 'rgba(212, 160, 23, 0.08)'
-          : isLeader
-          ? 'rgba(124, 58, 237, 0.05)'
-          : 'transparent',
+        borderBottom: '1px solid var(--rs-gray-dark)',
+        backgroundColor: 'transparent',
       }}
     >
       {/* Avatar */}
       <div
         className="h-8 w-8 shrink-0 overflow-hidden"
         style={{
-          border: isLeader
-            ? '2px solid #F59E0B'
-            : isJudge
-              ? '2px solid #D4A017'
-              : '2px solid #7C3AED',
-          imageRendering: 'pixelated',
+          border: '1px solid var(--rs-gray-dark)',
+          borderRadius: '0px',
         }}
       >
         <img
           src={agent.avatar || getAvatarUrl(agent.id)}
           alt={agent.name}
           className="h-full w-full object-cover"
-          style={{ imageRendering: 'pixelated' }}
         />
       </div>
 
@@ -76,8 +47,8 @@ function MessageItem({ msg }: MessageItemProps) {
           <span
             className="text-base font-bold truncate"
             style={{
-              fontFamily: 'var(--font-pixel-body)',
-              color: isLeader ? '#F59E0B' : isJudge ? '#D4A017' : '#E2E8F0',
+              fontFamily: 'var(--rs-font-display)',
+              color: 'var(--rs-white)',
             }}
           >
             {agent.name}
@@ -88,10 +59,12 @@ function MessageItem({ msg }: MessageItemProps) {
             <span
               className="shrink-0 px-1.5 py-0.5"
               style={{
-                fontFamily: 'var(--font-pixel-body)',
-                backgroundColor: '#F59E0B',
-                color: '#1A1A2E',
+                fontFamily: 'var(--rs-font-mono)',
+                border: '1px solid var(--rs-white)',
+                color: 'var(--rs-white)',
                 fontSize: '0.6rem',
+                letterSpacing: '1px',
+                borderRadius: '0px',
               }}
             >
               队长
@@ -102,10 +75,12 @@ function MessageItem({ msg }: MessageItemProps) {
           <span
             className="shrink-0 px-1.5 py-0.5 text-xs"
             style={{
-              fontFamily: 'var(--font-pixel-body)',
-              backgroundColor: roleStyle.bg,
-              color: roleStyle.text,
+              fontFamily: 'var(--rs-font-mono)',
+              backgroundColor: 'var(--rs-gray-dark)',
+              color: 'var(--rs-gray-light)',
               fontSize: '0.65rem',
+              letterSpacing: '1px',
+              borderRadius: '0px',
             }}
           >
             {agent.role}
@@ -130,38 +105,29 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
     return () => clearInterval(interval);
   }, [agent.startedAt]);
 
-  const roleStyle = getRoleStyle(agent.agentRole);
   const avatarNum = agent.agentId.match(/\d+/)?.[0] ?? '1';
 
   return (
     <div
-      className="flex gap-3 px-3 py-3 border-b"
+      className="flex gap-3 px-3 py-3"
       style={{
-        borderColor: 'rgba(124, 58, 237, 0.15)',
-        backgroundColor: agent.agentRole === '评委'
-          ? 'rgba(212, 160, 23, 0.06)'
-          : agent.isLeader
-          ? 'rgba(124, 58, 237, 0.08)'
-          : 'rgba(124, 58, 237, 0.04)',
+        borderBottom: '1px solid var(--rs-gray-dark)',
+        backgroundColor: 'transparent',
       }}
     >
       {/* Avatar with pulse */}
       <div
         className="h-8 w-8 shrink-0 overflow-hidden"
         style={{
-          border: agent.isLeader
-            ? '2px solid #F59E0B'
-            : agent.agentRole === '评委'
-            ? '2px solid #D4A017'
-            : '2px solid #7C3AED',
-          imageRendering: 'pixelated',
+          border: '1px solid var(--rs-gray-dark)',
+          borderRadius: '0px',
         }}
       >
         <img
           src={`/avatars/oc-${avatarNum}.jpeg`}
           alt={agent.agentName}
           className="h-full w-full object-cover"
-          style={{ imageRendering: 'pixelated', opacity: 0.7 }}
+          style={{ opacity: 0.7 }}
         />
       </div>
 
@@ -170,8 +136,8 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
           <span
             className="text-base font-bold"
             style={{
-              fontFamily: 'var(--font-pixel-body)',
-              color: agent.isLeader ? '#F59E0B' : agent.agentRole === '评委' ? '#D4A017' : '#E2E8F0',
+              fontFamily: 'var(--rs-font-display)',
+              color: 'var(--rs-white)',
               opacity: 0.8,
             }}
           >
@@ -181,10 +147,12 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
             <span
               className="shrink-0 px-1.5 py-0.5"
               style={{
-                fontFamily: 'var(--font-pixel-body)',
-                backgroundColor: '#F59E0B',
-                color: '#1A1A2E',
+                fontFamily: 'var(--rs-font-mono)',
+                border: '1px solid var(--rs-white)',
+                color: 'var(--rs-white)',
                 fontSize: '0.6rem',
+                letterSpacing: '1px',
+                borderRadius: '0px',
               }}
             >
               队长
@@ -193,10 +161,12 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
           <span
             className="shrink-0 px-1.5 py-0.5"
             style={{
-              fontFamily: 'var(--font-pixel-body)',
-              backgroundColor: roleStyle.bg,
-              color: roleStyle.text,
+              fontFamily: 'var(--rs-font-mono)',
+              backgroundColor: 'var(--rs-gray-dark)',
+              color: 'var(--rs-gray-light)',
               fontSize: '0.65rem',
+              letterSpacing: '1px',
+              borderRadius: '0px',
             }}
           >
             {agent.agentRole}
@@ -204,8 +174,8 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
           <span
             className="ml-auto text-xs tabular-nums"
             style={{
-              fontFamily: 'var(--font-pixel-body)',
-              color: '#64748B',
+              fontFamily: 'var(--rs-font-mono)',
+              color: 'var(--rs-gray)',
             }}
           >
             ({elapsed}s)
@@ -216,8 +186,8 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
         <div className="flex items-center gap-1.5">
           <span
             style={{
-              fontFamily: 'var(--font-pixel-body)',
-              color: '#64748B',
+              fontFamily: 'var(--rs-font-mono)',
+              color: 'var(--rs-gray)',
               fontSize: '0.75rem',
             }}
           >
@@ -228,9 +198,10 @@ function TypingIndicator({ agent }: { agent: TypingAgent }) {
               key={i}
               className="h-1.5 w-1.5"
               style={{
-                backgroundColor: '#7C3AED',
+                backgroundColor: 'var(--rs-gray-light)',
                 animation: `blink 1.2s step-end infinite`,
                 animationDelay: `${i * 0.4}s`,
+                borderRadius: '0px',
               }}
             />
           ))}
@@ -288,12 +259,12 @@ export function ChatSidebar() {
   return (
     <div
       className="flex h-full flex-col"
-      style={{ backgroundColor: '#0F0F23' }}
+      style={{ backgroundColor: 'var(--rs-black)' }}
     >
       {/* Group Tabs */}
       <div
-        className="flex shrink-0 border-b"
-        style={{ borderColor: 'rgba(124, 58, 237, 0.3)' }}
+        className="flex shrink-0"
+        style={{ borderBottom: '1px solid var(--rs-gray-dark)' }}
       >
         {[1, 2, 3, 4].map((groupId) => {
           const isActive = groupId === activeGroupTab;
@@ -307,22 +278,23 @@ export function ChatSidebar() {
               onClick={() => handleTabClick(groupId)}
               className="relative flex-1 cursor-pointer px-2 py-2.5 text-center transition-all duration-200"
               style={{
-                fontFamily: 'var(--font-pixel-body)',
+                fontFamily: 'var(--rs-font-display)',
                 fontSize: '1rem',
-                backgroundColor: isActive ? '#7C3AED' : '#1A1A35',
-                color: isActive ? '#FFFFFF' : '#94A3B8',
-                boxShadow: isActive
-                  ? '0 0 12px rgba(124, 58, 237, 0.5), inset 0 0 8px rgba(124, 58, 237, 0.2)'
-                  : 'none',
+                letterSpacing: '2px',
+                backgroundColor: 'var(--rs-black)',
+                color: isActive ? 'var(--rs-white)' : 'var(--rs-gray)',
+                border: '1px solid var(--rs-gray-dark)',
+                borderColor: isActive ? 'var(--rs-white)' : 'var(--rs-gray-dark)',
+                borderRadius: '0px',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.backgroundColor = '#252547';
+                  e.currentTarget.style.borderColor = 'var(--rs-gray-light)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.backgroundColor = '#1A1A35';
+                  e.currentTarget.style.borderColor = 'var(--rs-gray-dark)';
                 }
               }}
             >
@@ -330,10 +302,11 @@ export function ChatSidebar() {
               {/* Typing indicator dot on inactive tab */}
               {isTypingInGroup && (
                 <span
-                  className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full"
+                  className="absolute top-0.5 right-0.5 h-2 w-2"
                   style={{
-                    backgroundColor: '#A78BFA',
+                    backgroundColor: 'var(--rs-gray-light)',
                     animation: 'pulse 1.5s ease-in-out infinite',
+                    borderRadius: '0px',
                   }}
                 />
               )}
@@ -342,11 +315,11 @@ export function ChatSidebar() {
                 <span
                   className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center text-xs"
                   style={{
-                    fontFamily: 'var(--font-pixel-body)',
-                    backgroundColor: '#F43F5E',
-                    color: '#FFFFFF',
+                    fontFamily: 'var(--rs-font-mono)',
+                    backgroundColor: 'var(--rs-white)',
+                    color: 'var(--rs-black)',
                     fontSize: '0.6rem',
-                    borderRadius: '2px',
+                    borderRadius: '0px',
                     minWidth: '1.25rem',
                   }}
                 >
@@ -364,10 +337,11 @@ export function ChatSidebar() {
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
               <p
-                className="text-lg pixel-blink"
+                className="text-lg"
                 style={{
-                  fontFamily: 'var(--font-pixel-body)',
-                  color: '#64748B',
+                  fontFamily: 'var(--rs-font-mono)',
+                  color: 'var(--rs-gray)',
+                  letterSpacing: '2px',
                 }}
               >
                 等待讨论开始...
@@ -378,10 +352,11 @@ export function ChatSidebar() {
                     key={i}
                     className="h-2 w-2"
                     style={{
-                      backgroundColor: '#7C3AED',
+                      backgroundColor: 'var(--rs-gray-light)',
                       opacity: 0.4,
                       animation: `blink 1.5s step-end infinite`,
                       animationDelay: `${i * 0.5}s`,
+                      borderRadius: '0px',
                     }}
                   />
                 ))}
@@ -398,10 +373,10 @@ export function ChatSidebar() {
                     key={idx}
                     className="flex items-center gap-2 px-3 py-2 text-xs"
                     style={{
-                      fontFamily: 'var(--font-pixel-body)',
-                      color: '#A78BFA',
-                      backgroundColor: 'rgba(124, 58, 237, 0.06)',
-                      borderBottom: '1px solid rgba(124, 58, 237, 0.1)',
+                      fontFamily: 'var(--rs-font-mono)',
+                      color: 'var(--rs-gray)',
+                      backgroundColor: 'var(--rs-charcoal)',
+                      borderBottom: '1px solid var(--rs-gray-dark)',
                     }}
                   >
                     <span style={{ opacity: 0.7 }}>{msg.agent?.name}</span>

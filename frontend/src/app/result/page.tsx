@@ -1,29 +1,22 @@
 import { Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
 import ResultContent from './result-content';
 
 function ResultFallback() {
   return (
     <div
-      className="crt-overlay pixel-grid-bg flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: '#0F0F23' }}
+      className="flex min-h-screen items-center justify-center"
+      style={{ backgroundColor: 'var(--rs-black)' }}
     >
-      <div className="flex flex-col items-center gap-4">
-        <Loader2
-          size={32}
-          className="animate-spin"
-          style={{ color: '#A78BFA' }}
-        />
-        <p
-          className="text-lg"
-          style={{
-            fontFamily: 'var(--font-pixel-body)',
-            color: '#E2E8F0',
-          }}
-        >
-          加载中...
-        </p>
-      </div>
+      <p
+        style={{
+          fontFamily: 'var(--rs-font-mono)',
+          color: 'var(--rs-gray)',
+          letterSpacing: '3px',
+          animation: 'pulse 2s ease-in-out infinite',
+        }}
+      >
+        LOADING...
+      </p>
     </div>
   );
 }

@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
-import { Press_Start_2P, VT323 } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const pressStart2P = Press_Start_2P({
-  weight: "400",
-  variable: "--font-pixel-display",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
   display: "swap",
 });
 
-const vt323 = VT323({
-  weight: "400",
-  variable: "--font-pixel-body",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "HinH - Hackathon in Hackathon",
-  description: "在像素酒馆中，让 AI 角色为你的想法而战",
+  description: "AI-driven hackathon simulation platform",
 };
 
 export default function RootLayout({
@@ -29,9 +29,15 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`${pressStart2P.variable} ${vt323.variable} h-full`}
+      className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body
+        className="min-h-full flex flex-col"
+        style={{ background: '#0a0a0a', color: '#f0ede6' }}
+      >
+        <div className="scanline" />
+        {children}
+      </body>
     </html>
   );
 }

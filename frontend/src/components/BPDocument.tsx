@@ -20,7 +20,11 @@ export default function BPDocument({ bp }: BPDocumentProps) {
   return (
     <div
       className="space-y-0 overflow-hidden"
-      style={{ backgroundColor: '#12122a', border: '2px solid #2a2a4a' }}
+      style={{
+        backgroundColor: 'var(--rs-charcoal)',
+        border: '1px solid var(--rs-gray-dark)',
+        borderRadius: '0px',
+      }}
     >
       {SECTIONS.map((section, index) => (
         <div
@@ -29,24 +33,25 @@ export default function BPDocument({ bp }: BPDocumentProps) {
           style={{
             borderBottom:
               index < SECTIONS.length - 1
-                ? '1px solid #2a2a4a'
+                ? '1px solid var(--rs-gray-dark)'
                 : 'none',
           }}
         >
           <h4
-            className="mb-1 text-[10px] uppercase tracking-wider"
+            className="mb-1 text-[10px] uppercase"
             style={{
-              fontFamily: 'var(--font-pixel-display)',
-              color: '#A78BFA',
+              fontFamily: 'var(--rs-font-display)',
+              letterSpacing: '2px',
+              color: 'var(--rs-gray)',
             }}
           >
             {section.label}
           </h4>
           <p
-            className="text-lg leading-relaxed whitespace-pre-wrap"
+            className="text-sm leading-relaxed whitespace-pre-wrap"
             style={{
-              fontFamily: 'var(--font-pixel-body)',
-              color: '#E2E8F0',
+              fontFamily: 'var(--rs-font-mono)',
+              color: 'var(--rs-gray-light)',
             }}
           >
             {bp[section.key] || '--'}
