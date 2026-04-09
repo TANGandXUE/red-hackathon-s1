@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSimulationStore } from '@/stores/simulation-store';
 import { PhaseIndicator } from '@/components/PhaseIndicator';
@@ -53,8 +53,22 @@ export default function SimulationPage() {
   const results = useSimulationStore((s) => s.results);
   const groups = useSimulationStore((s) => s.groups);
   const typingAgents = useSimulationStore((s) => s.typingAgents);
+  const messages = useSimulationStore((s) => s.messages);
   const connectSSE = useSimulationStore((s) => s.connectSSE);
   const disconnect = useSimulationStore((s) => s.disconnect);
+
+  // Build agent name map from messages (characterId -> display name)
+  const agentNames = useMemo(() => {
+    const map = new Map<string, string>();
+    messages.forEach((msgs) => {
+      msgs.forEach((msg) => {
+        if (msg.agent?.id && msg.agent?.name) {
+          map.set(msg.agent.id, msg.agent.name);
+        }
+      });
+    });
+    return map;
+  }, [messages]);
 
   // Redirect to home if no simulation is active
   useEffect(() => {
@@ -133,6 +147,7 @@ export default function SimulationPage() {
             currentPhase={currentPhase}
             activeGroupId={activeGroupTab}
             speakingAgentId={speakingAgentId}
+            agentNames={agentNames}
           />
         </div>
 
