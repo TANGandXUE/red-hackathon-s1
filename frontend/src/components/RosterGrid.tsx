@@ -144,7 +144,7 @@ export function RosterGrid({
   /* ------ FLIP animation for Phase 0 -> 1 ------ */
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
   const prevPositions = useRef(new Map<string, DOMRect>());
-  const [flipState, setFlipState] = useState<'idle' | 'captured' | 'animating' | 'done'>('idle');
+  const [flipState, setFlipState] = useState<'idle' | 'captured' | 'done'>('idle');
 
   // Step 1: When phase changes to 1, capture current positions
   useEffect(() => {
@@ -181,8 +181,6 @@ export function RosterGrid({
       el.style.transition = `transform ${FLIP_DURATION_MS}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
       el.style.transform = 'skewX(-28deg)';
     });
-
-    setFlipState('animating');
 
     const timer = setTimeout(() => {
       cellRefs.current.forEach((el) => {
