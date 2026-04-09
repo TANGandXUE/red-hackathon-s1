@@ -2,5 +2,5 @@
 export function getAvatarUrl(agentId: string): string {
   const match = agentId.match(/(\d+)/);
   const num = match ? parseInt(match[1], 10) : 1;
-  return `/avatars/oc-${num}.jpeg`;
+  return `/avatars/oc-${num}.webp`;
 }

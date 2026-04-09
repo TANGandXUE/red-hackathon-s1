@@ -33,7 +33,7 @@ export default function RootLayout({
     >
       <body
         className="min-h-full flex flex-col"
-        style={{ background: '#0a0a0a', color: '#f0ede6' }}
+        style={{ background: '#000000', color: '#ededed' }}
       >
         <div className="scanline" />
         {children}

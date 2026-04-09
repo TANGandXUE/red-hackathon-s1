@@ -70,6 +70,9 @@ export function buildToolCallCb(
     });
 }
 
+/** Target members per group (groups will have 3-6 members via round-robin) */
+const TARGET_GROUP_SIZE = 5;
+
 export class PhaseExecutor {
   constructor(
     private llmService: LlmService,
@@ -80,8 +83,9 @@ export class PhaseExecutor {
   executePhase0(
     allCharacters: CharacterData[],
     ideas: string[],
-    groupCount = 4,
   ): GroupAssignment[] {
+    const groupCount = Math.ceil(allCharacters.length / TARGET_GROUP_SIZE);
+
     const leaderTypes = new Set(['ENTJ', 'ENFJ', 'ESTJ', 'ESTP', 'ENTP']);
     const backendTypes = new Set(['INTJ', 'INTP', 'ISTJ', 'ISTP']);
     const designerTypes = new Set(['ISFP', 'INFP', 'INFJ']);
@@ -125,31 +129,32 @@ export class PhaseExecutor {
       [withRoles[i], withRoles[j]] = [withRoles[j], withRoles[i]];
     }
 
-    // Split into groups
-    const groups: GroupAssignment[] = [];
-    const groupSize = Math.floor(withRoles.length / groupCount);
+    // Round-robin distribution into groups
+    const buckets: (typeof withRoles)[] = Array.from(
+      { length: groupCount },
+      () => [],
+    );
+    for (let i = 0; i < withRoles.length; i++) {
+      buckets[i % groupCount].push(withRoles[i]);
+    }
 
-    for (let g = 0; g < groupCount; g++) {
-      const start = g * groupSize;
-      const end = g === groupCount - 1 ? withRoles.length : start + groupSize;
-      const groupMembers = withRoles.slice(start, end);
+    // Build GroupAssignment[] — elect 1 leader per group
+    const groups: GroupAssignment[] = buckets.map((bucket, g) => {
+      // Sort by leaderScore desc so index 0 is the leader
+      bucket.sort((a, b) => b.leaderScore - a.leaderScore);
 
-      // Select leader (highest leaderScore)
-      groupMembers.sort((a, b) => b.leaderScore - a.leaderScore);
-
-      // Assign idea: distribute across groups
       const ideaIndex = Math.min(g, ideas.length - 1);
 
-      groups.push({
+      return {
         groupId: g + 1,
         idea: ideas[ideaIndex],
-        members: groupMembers.map((m, idx) => ({
+        members: bucket.map((m, idx) => ({
           characterId: m.character.id,
           role: idx === 0 ? '产品经理' : m.role,
           isLeader: idx === 0,
         })),
-      });
-    }
+      };
+    });
 
     return groups;
   }

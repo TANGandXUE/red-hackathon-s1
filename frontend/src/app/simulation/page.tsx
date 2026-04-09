@@ -141,7 +141,7 @@ export default function SimulationPage() {
       {/* Main content: roster + chat */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel: Roster Grid (~60%) */}
-        <div className="w-[60%] overflow-auto">
+        <div className="w-[65%] overflow-auto">
           <RosterGrid
             groups={groups}
             currentPhase={currentPhase}
@@ -153,7 +153,7 @@ export default function SimulationPage() {
 
         {/* Right panel: Chat Sidebar (~40%) */}
         <div
-          className="w-[40%] border-l"
+          className="w-[35%] border-l"
           style={{ borderColor: 'var(--rs-gray-dark)' }}
         >
           <ChatSidebar />

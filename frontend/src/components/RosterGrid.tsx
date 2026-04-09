@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import type { GroupInfo } from '@/types/simulation';
+import { getAvatarUrl } from '@/lib/avatar';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -29,8 +30,8 @@ interface CellData {
   groupId: number;
   groupName: string;
   isLeader: boolean;
-  track: 'SW' | 'HW';
   initial: string;
+  avatarUrl: string;
 }
 
 interface DetailPopup {
@@ -43,8 +44,6 @@ interface DetailPopup {
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const TOTAL_CELLS = 40;
-const BREATHING_RATIO = 0.08;
 const ACTIVATION_DELAY_MS = 80;
 const HOVER_DELAY_MS = 200;
 
@@ -68,6 +67,7 @@ function getInitial(name: string): string {
   return name.charAt(0).toUpperCase();
 }
 
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -83,8 +83,7 @@ export function RosterGrid({
   const cells = useMemo<CellData[]>(() => {
     if (!groups.length) return [];
     const all: CellData[] = [];
-    groups.forEach((g, gi) => {
-      const track: 'SW' | 'HW' = gi % 2 === 0 ? 'SW' : 'HW';
+    groups.forEach((g) => {
       g.members.forEach((m) => {
         const displayName = agentNames?.get(m.characterId) ?? m.characterId;
         all.push({
@@ -92,10 +91,10 @@ export function RosterGrid({
           name: displayName,
           role: m.role,
           groupId: g.groupId,
-          groupName: `组${g.groupId}`,
+          groupName: `\u7EC4${g.groupId}`,
           isLeader: m.isLeader,
-          track,
           initial: getInitial(displayName),
+          avatarUrl: getAvatarUrl(m.characterId),
         });
       });
     });
@@ -108,16 +107,26 @@ export function RosterGrid({
     [cells],
   );
 
-  const groupedOrder = useMemo(() => {
-    // group by groupId, preserve intra-group order
+  const groupedMap = useMemo(() => {
     const byGroup = new Map<number, CellData[]>();
     cells.forEach((c) => {
       const arr = byGroup.get(c.groupId) ?? [];
       arr.push(c);
       byGroup.set(c.groupId, arr);
     });
-    return Array.from(byGroup.values()).flat();
+    return byGroup;
   }, [cells]);
+
+  const groupedOrder = useMemo(() => {
+    return Array.from(groupedMap.values()).flat();
+  }, [groupedMap]);
+
+  /** O(1) index lookup for grouped cells (avoids indexOf O(n) per cell) */
+  const groupedIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    groupedOrder.forEach((c, i) => map.set(c.characterId, i));
+    return map;
+  }, [groupedOrder]);
 
   const displayOrder = currentPhase === 0 ? randomOrder : groupedOrder;
 
@@ -126,7 +135,6 @@ export function RosterGrid({
 
   useEffect(() => {
     if (cells.length === 0) return;
-    // stagger activation via interval callbacks
     let count = 0;
     const timer = setInterval(() => {
       count += 1;
@@ -139,19 +147,6 @@ export function RosterGrid({
     };
   }, [cells.length]);
 
-  /* ------ breathing mask for dark cells ------ */
-  const breathingSet = useMemo(() => {
-    const set = new Set<number>();
-    const total = TOTAL_CELLS;
-    const count = Math.ceil(total * BREATHING_RATIO);
-    let s = 7;
-    while (set.size < count) {
-      s = (s * 16807) % 2147483647;
-      set.add(s % total);
-    }
-    return set;
-  }, []);
-
   /* ------ FLIP animation for shuffle ------ */
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
   const prevPositions = useRef(new Map<string, DOMRect>());
@@ -160,13 +155,11 @@ export function RosterGrid({
   // Capture positions before reorder
   useEffect(() => {
     if (currentPhase === 1 && shufflePhase < 1) {
-      // snapshot current positions
       const positions = new Map<string, DOMRect>();
       cellRefs.current.forEach((el, id) => {
         positions.set(id, el.getBoundingClientRect());
       });
       prevPositions.current = positions;
-      // trigger the reorder in next frame
       requestAnimationFrame(() => {
         setShufflePhase(1);
       });
@@ -184,16 +177,12 @@ export function RosterGrid({
       const dx = oldRect.left - newRect.left;
       const dy = oldRect.top - newRect.top;
       if (dx === 0 && dy === 0) return;
-      // set initial offset (no transition)
       el.style.transition = 'none';
       el.style.transform = `translate(${dx}px, ${dy}px)`;
-      // force reflow
       el.getBoundingClientRect();
-      // animate to final position
       el.style.transition = 'transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       el.style.transform = 'translate(0, 0)';
     });
-    // cleanup after animation
     const timer = setTimeout(() => {
       cellRefs.current.forEach((el) => {
         el.style.transition = '';
@@ -213,7 +202,6 @@ export function RosterGrid({
     (cell: CellData, e: React.MouseEvent<HTMLDivElement>) => {
       const rect = e.currentTarget.getBoundingClientRect();
       hoverTimer.current = setTimeout(() => {
-        // Position: try right, then left, then bottom
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         const popupW = 280;
@@ -257,17 +245,7 @@ export function RosterGrid({
     [],
   );
 
-  /* ------ split cells into SW / HW tracks ------ */
-  const swCells = useMemo(
-    () => displayOrder.filter((c) => c.track === 'SW'),
-    [displayOrder],
-  );
-  const hwCells = useMemo(
-    () => displayOrder.filter((c) => c.track === 'HW'),
-    [displayOrder],
-  );
-
-  /* ------ render ------ */
+  /* ------ render a single cell ------ */
   const renderCell = (cell: CellData, index: number) => {
     const isActivated = index < activatedCount;
     const isSpeaking = speakingAgentId === cell.characterId;
@@ -277,7 +255,6 @@ export function RosterGrid({
     const classNames = [
       'grid-cell',
       isActivated ? 'active' : 'dark',
-      !isActivated && breathingSet.has(index) ? 'breathing' : '',
       isSpeaking ? 'focus' : '',
       isActiveGroup && currentPhase >= 1 ? 'group-highlight' : '',
       isFlipped ? 'flipped' : '',
@@ -300,188 +277,224 @@ export function RosterGrid({
         onClick={() => handleCellClick(cell.characterId)}
       >
         <div className="card-inner">
-          {/* Front */}
-          <div className="card-front flex flex-col items-center justify-center p-1">
+          {/* Front — card art image with gradient overlay */}
+          <div className="card-front" style={{ overflow: 'hidden' }}>
+            <img
+              src={cell.avatarUrl}
+              alt={cell.name}
+              loading="lazy"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+            {/* Bottom gradient overlay with name and role */}
             <div
-              className="flex items-center justify-center rounded-sm font-mono text-lg"
               style={{
-                width: 32,
-                height: 32,
-                background: 'var(--rs-charcoal)',
-                color: 'var(--rs-gray)',
-                fontWeight: 700,
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '24px 6px 6px',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
               }}
             >
-              {cell.initial}
+              <span
+                className="font-display truncate font-bold"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--rs-white)',
+                  lineHeight: 1.2,
+                }}
+              >
+                {cell.name}
+              </span>
+              <span
+                className="font-mono truncate uppercase"
+                style={{
+                  fontSize: 8,
+                  color: 'var(--rs-gray-light)',
+                  letterSpacing: 1,
+                }}
+              >
+                {cell.role}
+              </span>
             </div>
-            <span
-              className="mt-1 truncate text-center"
-              style={{
-                fontSize: 10,
-                color: 'var(--rs-white)',
-                maxWidth: '100%',
-              }}
-            >
-              {cell.name}
-            </span>
-            <span
-              className="font-mono uppercase"
-              style={{
-                fontSize: 7,
-                color: 'var(--rs-gray)',
-                letterSpacing: 1,
-              }}
-            >
-              {cell.role}
-            </span>
-            <span className="track-badge">{cell.track}</span>
           </div>
 
-          {/* Back */}
-          <div
-            className="card-back flex flex-col justify-center gap-0.5 p-2"
-            style={{ background: 'var(--rs-charcoal)' }}
-          >
-            <span
-              className="font-display font-bold"
-              style={{ fontSize: 12, color: 'var(--rs-white)' }}
+          {/* Back — blurred card art with info overlay */}
+          <div className="card-back" style={{ overflow: 'hidden' }}>
+            <img
+              src={cell.avatarUrl}
+              alt=""
+              loading="lazy"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                filter: 'blur(8px) brightness(0.4)',
+                transform: 'scale(1.1)',
+              }}
+            />
+            <div
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                height: '100%',
+                padding: 8,
+                gap: 3,
+              }}
             >
-              {cell.name}
-            </span>
-            <span
-              className="font-mono uppercase"
-              style={{ fontSize: 8, color: 'var(--rs-gray)' }}
-            >
-              {cell.role} &middot; {cell.characterId}
-            </span>
-            <span style={{ fontSize: 8, color: 'var(--rs-gray-light)' }}>
-              {cell.isLeader ? '★ Leader' : 'Member'}
-            </span>
-            <span style={{ fontSize: 8, color: 'var(--rs-gray)' }}>
-              {cell.groupName}
-            </span>
+              <span
+                className="font-display font-bold"
+                style={{ fontSize: 12, color: 'var(--rs-white)' }}
+              >
+                {cell.name}
+              </span>
+              <span
+                className="font-mono uppercase"
+                style={{ fontSize: 8, color: 'var(--rs-gray-light)' }}
+              >
+                {cell.role} &middot; {cell.characterId}
+              </span>
+              <span style={{ fontSize: 8, color: 'var(--rs-white)' }}>
+                {cell.isLeader ? '\u2605 Leader' : 'Member'}
+              </span>
+              <span style={{ fontSize: 8, color: 'var(--rs-gray-light)' }}>
+                {cell.groupName}
+              </span>
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
-  const renderDarkCell = (index: number) => {
-    const isBreathing = breathingSet.has(index);
-    return (
-      <div
-        key={`empty-${index}`}
-        className={`grid-cell dark${isBreathing ? ' breathing' : ''}`}
-      />
-    );
-  };
-
-  // When no groups data yet, show all-dark grid
+  /* ------ empty state ------ */
   if (cells.length === 0) {
     return (
-      <div className="flex h-full w-full gap-6 p-4">
-        <TrackColumn label="SOFTWARE">
-          {Array.from({ length: TOTAL_CELLS / 2 }, (_, i) => renderDarkCell(i))}
-        </TrackColumn>
-        <TrackColumn label="HARDWARE">
-          {Array.from({ length: TOTAL_CELLS / 2 }, (_, i) =>
-            renderDarkCell(i + TOTAL_CELLS / 2),
-          )}
-        </TrackColumn>
+      <div className="flex h-full w-full items-center justify-center">
+        <span
+          className="font-mono uppercase"
+          style={{ fontSize: 11, color: 'var(--rs-gray)', letterSpacing: 3 }}
+        >
+          Awaiting roster data...
+        </span>
       </div>
     );
   }
 
-  // Fill remaining slots with dark cells
-  const swPadCount = Math.max(0, TOTAL_CELLS / 2 - swCells.length);
-  const hwPadCount = Math.max(0, TOTAL_CELLS / 2 - hwCells.length);
+  /* ------ Phase 0: single flat grid ------ */
+  if (currentPhase === 0) {
+    return (
+      <div className="h-full w-full overflow-auto p-3">
+        <div
+          className="grid gap-1"
+          style={{
+            gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+          }}
+        >
+          {displayOrder.map((c, i) => renderCell(c, i))}
+        </div>
+
+        {/* Hover detail portal */}
+        {renderDetailPortal()}
+      </div>
+    );
+  }
+
+  /* ------ Phase >= 1: grouped layout ------ */
+  const groupEntries = Array.from(groupedMap.entries());
 
   return (
-    <div className="flex h-full w-full gap-6 overflow-auto p-4">
-      <TrackColumn label="SOFTWARE">
-        {swCells.map((c, i) => renderCell(c, i))}
-        {Array.from({ length: swPadCount }, (_, i) =>
-          renderDarkCell(swCells.length + i),
-        )}
-      </TrackColumn>
-      <TrackColumn label="HARDWARE">
-        {hwCells.map((c, i) => renderCell(c, i + swCells.length))}
-        {Array.from({ length: hwPadCount }, (_, i) =>
-          renderDarkCell(TOTAL_CELLS / 2 + hwCells.length + i),
-        )}
-      </TrackColumn>
-
-      {/* Hover detail portal */}
-      {detail &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            className="detail-card visible"
-            style={{ left: detail.x, top: detail.y }}
-          >
-            <p
-              className="font-display font-bold"
-              style={{ fontSize: 14, color: 'var(--rs-white)', marginBottom: 8 }}
-            >
-              {detail.cell.name}
-            </p>
-            <p style={{ fontSize: 11, color: 'var(--rs-gray-light)', marginBottom: 4 }}>
-              {detail.cell.role}
-              {detail.cell.isLeader ? ' · Leader' : ''}
-            </p>
-            <p style={{ fontSize: 11, color: 'var(--rs-gray)' }}>
-              {detail.cell.groupName}
-            </p>
-            {speakingAgentId === detail.cell.characterId && (
-              <p
-                className="font-mono mt-2 uppercase"
+    <div className="h-full w-full overflow-auto p-3">
+      <div className="flex flex-col gap-6">
+        {groupEntries.map(([groupId, members]) => {
+          const isActive = activeGroupId === groupId;
+          return (
+            <div key={groupId}>
+              {/* Group label */}
+              <div
+                className="font-mono mb-2 uppercase"
                 style={{
-                  fontSize: 9,
-                  color: 'var(--rs-white)',
-                  letterSpacing: 2,
+                  fontSize: 11,
+                  letterSpacing: 3,
+                  color: isActive ? 'var(--rs-white)' : 'var(--rs-gray)',
                 }}
               >
-                ● Speaking
-              </p>
-            )}
-          </div>,
-          document.body,
+                {`\u7EC4 ${groupId}`}
+              </div>
+              {/* Group grid */}
+              <div
+                className="grid gap-1"
+                style={{
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                  border: isActive ? '1px solid var(--rs-gray)' : '1px solid transparent',
+                  borderRadius: 4,
+                  padding: isActive ? 4 : 4,
+                }}
+              >
+                {members.map((c) => {
+                  const globalIdx = groupedIndexMap.get(c.characterId) ?? 0;
+                  return renderCell(c, globalIdx);
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Hover detail portal */}
+      {renderDetailPortal()}
+    </div>
+  );
+
+  /* ------ detail portal helper ------ */
+  function renderDetailPortal() {
+    if (!detail || typeof document === 'undefined') return null;
+    return createPortal(
+      <div
+        className="detail-card visible"
+        style={{ left: detail.x, top: detail.y }}
+      >
+        <p
+          className="font-display font-bold"
+          style={{ fontSize: 14, color: 'var(--rs-white)', marginBottom: 8 }}
+        >
+          {detail.cell.name}
+        </p>
+        <p style={{ fontSize: 11, color: 'var(--rs-gray-light)', marginBottom: 4 }}>
+          {detail.cell.role}
+          {detail.cell.isLeader ? ' \u00B7 Leader' : ''}
+        </p>
+        <p style={{ fontSize: 11, color: 'var(--rs-gray)' }}>
+          {detail.cell.groupName}
+        </p>
+        {speakingAgentId === detail.cell.characterId && (
+          <p
+            className="font-mono mt-2 uppercase"
+            style={{
+              fontSize: 9,
+              color: 'var(--rs-white)',
+              letterSpacing: 2,
+            }}
+          >
+            \u25CF Speaking
+          </p>
         )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Track Column                                                       */
-/* ------------------------------------------------------------------ */
-
-function TrackColumn({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-1 flex-col">
-      <div
-        className="font-mono mb-3 uppercase"
-        style={{
-          fontSize: 11,
-          letterSpacing: 3,
-          color: 'var(--rs-gray)',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        className="grid gap-1"
-        style={{
-          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
+      </div>,
+      document.body,
+    );
+  }
 }

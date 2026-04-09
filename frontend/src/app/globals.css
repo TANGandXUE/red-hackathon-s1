@@ -132,12 +132,12 @@
 /* === Roster Screen Design System === */
 
 :root {
-  --rs-black: #0a0a0a;
-  --rs-white: #f0ede6;
-  --rs-charcoal: #1a1a1a;
-  --rs-gray-dark: #2a2a2a;
-  --rs-gray: #666666;
-  --rs-gray-light: #999999;
+  --rs-black: #000000;
+  --rs-white: #ededed;
+  --rs-charcoal: #111111;
+  --rs-gray-dark: #222222;
+  --rs-gray: #555555;
+  --rs-gray-light: #888888;
   --rs-font-display: 'Space Grotesk', sans-serif;
   --rs-font-mono: 'JetBrains Mono', monospace;
 }

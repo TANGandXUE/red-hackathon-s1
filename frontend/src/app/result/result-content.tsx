@@ -128,7 +128,7 @@ export default function ResultContent() {
       className="min-h-screen px-4 py-12"
       style={{ backgroundColor: 'var(--rs-black)' }}
     >
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-5xl">
         {/* Title */}
         <h1
           className="mb-2 text-center"

@@ -97,7 +97,7 @@ export default function Home() {
 
       {/* Divider */}
       <div
-        className="mb-8 w-full max-w-xl"
+        className="mb-8 w-full max-w-2xl"
         style={{
           height: '1px',
           backgroundColor: 'var(--rs-gray-dark)',
@@ -105,7 +105,7 @@ export default function Home() {
       />
 
       {/* Idea input section */}
-      <div className="w-full max-w-xl space-y-4">
+      <div className="w-full max-w-2xl space-y-4">
         {ideas.map((idea, index) => (
           <div key={idea.id} className="relative">
             {/* Numbered badge */}
@@ -207,7 +207,7 @@ export default function Home() {
 
       {/* Divider */}
       <div
-        className="mt-8 mb-8 w-full max-w-xl"
+        className="mt-8 mb-8 w-full max-w-2xl"
         style={{
           height: '1px',
           backgroundColor: 'var(--rs-gray-dark)',
