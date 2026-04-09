@@ -199,6 +199,16 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     };
 
     set({ eventSource: es });
+
+    // Fetch groups immediately in case they're already assigned
+    api.getSimulationStatus(simulationId).then((status) => {
+      if (status.groups?.length && get().groups.length === 0) {
+        get().setGroups(status.groups);
+      }
+      if (status.phase !== undefined) {
+        get().setPhase(status.phase);
+      }
+    }).catch(() => { /* ignore */ });
   },
 
   disconnect: () => {

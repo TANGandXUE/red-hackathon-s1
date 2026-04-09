@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - heading "HinH" [level=1] [ref=e4]
+    - paragraph [ref=e5]: 在像素酒馆中，让 AI 角色为你的想法而战
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: "1"
+        - textbox "输入你的第一个想法..." [ref=e10]
+      - button "添加更多想法" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+        - text: 添加更多想法
+    - button "开始模拟" [ref=e14] [cursor=pointer]:
+      - generic [ref=e15]:
+        - img [ref=e16]
+        - text: 开始模拟
+  - button "Open Next.js Dev Tools" [ref=e30] [cursor=pointer]:
+    - img [ref=e31]
+  - alert [ref=e34]

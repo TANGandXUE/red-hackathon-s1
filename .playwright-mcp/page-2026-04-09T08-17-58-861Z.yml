@@ -1,0 +1,30 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - heading "HinH" [level=1] [ref=e4]
+    - paragraph [ref=e5]: 在像素酒馆中，让 AI 角色为你的想法而战
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: "1"
+        - textbox "输入你的第一个想法..." [ref=e10]: AI驱动的智能家居控制系统
+        - button "移除这个想法" [ref=e35] [cursor=pointer]:
+          - img [ref=e36]
+      - generic [ref=e39]:
+        - generic [ref=e40]: "2"
+        - textbox "输入你的第二个想法..." [ref=e41]: 基于区块链的去中心化社交平台
+        - button "移除这个想法" [ref=e42] [cursor=pointer]:
+          - img [ref=e43]
+      - generic [ref=e46]:
+        - generic [ref=e47]: "3"
+        - textbox "输入你的第三个想法..." [ref=e48]
+        - button "移除这个想法" [ref=e49] [cursor=pointer]:
+          - img [ref=e50]
+      - button "添加更多想法" [active] [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+        - text: 添加更多想法
+    - button "开始模拟" [ref=e14] [cursor=pointer]:
+      - generic [ref=e15]:
+        - img [ref=e16]
+        - text: 开始模拟
+  - button "Open Next.js Dev Tools" [ref=e31] [cursor=pointer]:
+    - img [ref=e32]
+  - alert [ref=e25]
