@@ -470,17 +470,21 @@
     animation-play-state: paused;
   }
 
-  /* Marquee card — same structure as grid-cell but smaller */
+  /*
+   * Marquee card — copied from Tekken8 .charaSlider .sliderItem
+   * Reference: 300×600px at desktop, scaled to 200×320px for 65% panel
+   */
   .marquee-card {
     display: block;
-    margin: 0 5px;
-    width: 120px !important;
-    height: 160px !important;
+    margin: 0 10px;
+    width: 200px !important;
+    height: 320px !important;
     flex-shrink: 0;
     position: relative;
     transform: skewX(-28deg);
   }
 
+  /* Inner — copied from .charaSlider .sliderItem a */
   .marquee-card-inner {
     display: block;
     width: 100%;
@@ -492,6 +496,7 @@
     cursor: pointer;
   }
 
+  /* Dark overlay — default transparent for marquee (like reference slider) */
   .marquee-card-inner::before {
     content: '';
     display: block;
@@ -507,36 +512,45 @@
     pointer-events: none;
   }
 
+  /* Image — copied from .charaSlider .sliderItem img at 1280px */
   .marquee-card img {
     display: block;
-    width: 250px;
+    width: 420px;
     max-width: inherit !important;
     height: auto;
     position: absolute;
-    top: 0;
+    top: 50%;
     left: 50%;
-    transform: translate(-50%, 0) skewX(28deg);
+    transform: translate(-50%, -50%) skewX(28deg);
+    transition: 0.4s;
   }
 
+  /* Hover — copied from .charaSlider a:hover */
   .marquee-card-inner:hover {
     border: 1px solid var(--tk-cyan);
-    box-shadow: 0 0 15px var(--tk-cyan-glow);
+    box-shadow: 0px 0px 15px 0px var(--tk-cyan-glow);
+  }
+
+  .marquee-card-inner:hover::before {
+    opacity: 0.6;
   }
 
   .marquee-card-inner:hover .hover-info-overlay {
     opacity: 1;
   }
 
+  /* Name label — copied from .charaSlider .sliderItem .name at 1280px */
   .marquee-card .name-label {
     display: block;
     background: var(--tk-pink);
     color: #fff;
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 500;
     font-style: italic;
+    letter-spacing: 0;
     position: absolute;
-    bottom: 0;
-    right: 0;
+    bottom: -16px;
+    right: -8px;
     z-index: 3;
     opacity: 1;
     pointer-events: none;
@@ -544,7 +558,7 @@
 
   .marquee-card .name-label span {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 12px 24px;
     transform: skewX(28deg);
     white-space: nowrap;
   }
@@ -552,6 +566,17 @@
   .marquee-card.focus .marquee-card-inner {
     border-color: var(--tk-cyan);
     box-shadow: 0 0 20px var(--tk-cyan-glow);
+  }
+
+  /* Group full glow flash */
+  @keyframes groupGlow {
+    0% { box-shadow: 0 0 5px var(--tk-cyan-glow); }
+    50% { box-shadow: 0 0 30px var(--tk-cyan), 0 0 60px var(--tk-cyan-glow); border-color: var(--tk-cyan); }
+    100% { box-shadow: 0 0 5px var(--tk-cyan-glow); }
+  }
+
+  .group-container.glow {
+    animation: groupGlow 0.8s ease 2;
   }
 }
 
